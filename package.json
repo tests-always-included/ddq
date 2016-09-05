@@ -1,7 +1,7 @@
 {
   "author": "Christopher Tetreault",
   "bugs": {
-    "url": "https://github.com/tests-always-included/jasmine-test-helpers/issues"
+    "url": "https://github.com/tests-always-included/ddq/issues"
   },
   "dependencies": {},
   "description": "DeDuplicated Queue",
@@ -15,7 +15,7 @@
   "engines": {
     "node": "*"
   },
-  "homepage": "https://github.com/tests-always-included/jasmine-test-helpers#readme",
+  "homepage": "https://github.com/tests-always-included/ddq#readme",
   "license": "MIT",
   "main": "lib/index.js",
   "name": "ddq",
