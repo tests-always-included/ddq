@@ -1,14 +1,19 @@
 "use strict";
 
 describe("tests", () => {
-    var config, Index;
+    var config, cryptoMock, Index;
 
     beforeEach(() => {
+        var mock;
+
+        mock = require("mock-require");
+        mock("crypto", "../mock/crypto.mock");
+        mock("EventEmitter", "../mock/event-emitter.mock");
         config = {
             backend: "mysql",
             pollingRate: 1000
         };
-        Index = require("../../lib/index");
+        Index = mock.reRequire("../../lib/index");
     });
     describe("can make and send message", () => {
         it("can make a new thing", () => {
@@ -26,6 +31,14 @@ describe("tests", () => {
                 Ddq = new Index(config);
                 Ddq.sendMessage();
             }).toThrow("No Message passed.");
+        });
+         it("successfully passes a message", () => {
+            var Ddq;
+
+            Ddq = new Index(config);
+            Ddq.sendMessage("errorCreate", (error) => {
+                expect(error).toEqual(Error("Could not create message"));
+            });
         });
         it("fails because of no config being passed", () => {
             expect(() => {

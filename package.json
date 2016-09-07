@@ -21,8 +21,8 @@
   "name": "ddq",
   "private": false,
   "repository": {
-      "type": "git",
-      "url": "git+https://github.com/tests-always-included/ddq.git"
+    "type": "git",
+    "url": "git+https://github.com/tests-always-included/ddq.git"
   },
   "scripts": {
     "test": "istanbul cover jasmine-node --captureExceptions spec/ && codecov && eslint .",
