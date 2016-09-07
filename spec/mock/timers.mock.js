@@ -6,7 +6,12 @@ mock = jasmine.createSpyObj("mockTimers", [
     "setInterval",
     "clearInterval"
 ]);
+mock.clearInterval.andCallFake(() => {
+    return null;
+});
+mock.setInterval.andCallFake((callback) => {
+    callback(null);
+});
 
-mock.setInterval.andReturn(true);
 
 module.exports = mock;
