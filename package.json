@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/tests-always-included/ddq#readme",
   "license": "MIT",
-  "main": "lib/index.js",
+  "main": "lib/ddq.js",
   "name": "ddq",
   "private": false,
   "repository": {
