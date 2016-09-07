@@ -1,7 +1,7 @@
 "use strict";
 
 describe("tests", () => {
-    var config, cryptoMock, Index;
+    var config, Index;
 
     beforeEach(() => {
         var mock;
@@ -32,7 +32,7 @@ describe("tests", () => {
                 Ddq.sendMessage();
             }).toThrow("No Message passed.");
         });
-         it("successfully passes a message", () => {
+        it("successfully passes a message", () => {
             var Ddq;
 
             Ddq = new Index(config);
@@ -60,6 +60,7 @@ describe("tests", () => {
 
             listener = Ddq.listen();
             listener.on("data", () => {
+                listener.close();
             });
         });
     });

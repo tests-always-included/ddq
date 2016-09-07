@@ -7,7 +7,7 @@ mock = jasmine.createSpyObj("cryptoMock", [
     "digest",
     "update"
 ]);
-mock.createHash.andCallFake((message) => {
+mock.createHash.andCallFake(() => {
     return {
         update: mock.update
     };

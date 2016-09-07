@@ -1,7 +1,12 @@
 "use strict";
 
-
-class EventEmitter {
+/**
+ * Mock EventEmitter.
+ */
+class EventEmitterMock {
+    /**
+     * Constructor for Mock EventEmitter.
+     */
     constructor() {
         [
             "addListener",
@@ -9,9 +14,9 @@ class EventEmitter {
         ].forEach((methodName) => {
             this[methodName] = jasmine.createSpy(methodName);
         });
-        addListener.andCallFake();
-        emit.andCallFake();
+        this.addListener.andCallFake();
+        this.emit.andCallFake();
     }
 }
 
-module.exports = EventEmitter;
+module.exports = EventEmitterMock;
