@@ -8,12 +8,13 @@ describe("tests", () => {
 
         mock = require("mock-require");
         mock("crypto", "../mock/crypto.mock");
-        mock("EventEmitter", "../mock/event-emitter.mock");
+        mock("events", "../mock/event-emitter.mock");
+        mock("timers", "../mock/timers.mock");
         config = {
             backend: "mysql",
             pollingRate: 1000
         };
-        Index = mock.reRequire("../../lib/index");
+        Index = mock.reRequire("../../lib/ddq");
     });
     describe("can make and send message", () => {
         it("can make a new thing", () => {
@@ -56,11 +57,19 @@ describe("tests", () => {
             Ddq = new Index(config);
         });
         it("fdaf", () => {
-            var listener;
+            Ddq.listen();
+        });
+    });
+    describe("closing listeners", () => {
+        var Ddq;
 
-            listener = Ddq.listen();
-            listener.on("data", () => {
-                listener.close();
+        beforeEach(() => {
+            Ddq = new Index(config);
+        });
+        it("fdaf", () => {
+            Ddq.listen();
+            Ddq.close(() => {
+
             });
         });
     });

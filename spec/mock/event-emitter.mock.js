@@ -10,12 +10,16 @@ class EventEmitterMock {
     constructor() {
         [
             "addListener",
-            "emit"
+            "emit",
+            "removeListener",
+            "on"
         ].forEach((methodName) => {
             this[methodName] = jasmine.createSpy(methodName);
         });
-        this.addListener.andCallFake();
+        this.addListener.andCallFake(() => {});
         this.emit.andCallFake();
+        this.removeListener.andCallFake(() => {});
+        this.on.andCallFake();
     }
 }
 
