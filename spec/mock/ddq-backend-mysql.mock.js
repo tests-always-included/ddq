@@ -24,7 +24,13 @@ module.exports = function () {
     mock.sendMessage.andCallFake(() => {
 
     });
-    mock.setHeartbeat.andCallFake(() => {});
+    mock.setHeartbeat.andCallFake((params) => {
+        if (params.id === "someRandomMessageIdHashFail") {
+            return false;
+        }
+
+        return true;
+    });
 
     return mock;
 };

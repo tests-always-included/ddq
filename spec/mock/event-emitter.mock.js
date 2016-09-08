@@ -19,7 +19,9 @@ class EventEmitterMock {
         this.addListener.andCallFake(() => {});
         this.emit.andCallFake(() => {});
         this.removeListener.andCallFake(() => {});
-        this.on.andCallFake();
+        this.on.andCallFake((event, callback) => {
+            callback(true);
+        });
     }
 }
 

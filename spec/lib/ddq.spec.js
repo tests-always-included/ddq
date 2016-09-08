@@ -1,12 +1,10 @@
 "use strict";
 
 describe("tests", () => {
-    var config, Index;
+    var config, Index, mock;
 
+    mock = require("mock-require");
     beforeEach(() => {
-        var mock;
-
-        mock = require("mock-require");
         mock("crypto", "../mock/crypto.mock");
         mock("events", "../mock/event-emitter.mock");
         mock("timers", "../mock/timers.mock");
@@ -17,6 +15,9 @@ describe("tests", () => {
             heartbeatRate: 1000
         };
         Index = mock.reRequire("../../lib/ddq");
+    });
+    afterEach(() => {
+        mock.stopAll();
     });
     describe(".constructor()", () => {
         it("can make a new DDQ", () => {
@@ -42,10 +43,11 @@ describe("tests", () => {
         beforeEach(() => {
             Ddq = new Index(config);
         });
-        it("fdaf", () => {
+        it("closes the polling of data", () => {
+            // need to listen first.
             Ddq.listen();
-            Ddq.close(() => {
-
+            Ddq.close((error) => {
+                expect(error).toBe(null);
             });
         });
     });
@@ -85,8 +87,27 @@ describe("tests", () => {
         beforeEach(() => {
             Ddq = new Index(config);
         });
-        it("fdaf", () => {
-            Ddq.listen();
+        it("listens and gets data", () => {
+            var listener;
+
+            listener = Ddq.listen();
+            listener.on("data", (blah) => {
+                expect(blah).toBe(true);
+            });
+        });
+        it("listens and does not get data", () => {
+            var listener;
+
+            mock.stop("ddq-backend-mysql");
+            mock("ddq-backend-mysql", {
+                checkForData: () => {
+                    console.log('checkafsdfas');
+                    return false;
+                }
+            });
+            Index = mock.reRequire("../../lib/ddq");
+            Ddq = new Index(config);
+            listener = Ddq.listen();
         });
     });
     describe(".sendMessage()", () => {
@@ -106,6 +127,20 @@ describe("tests", () => {
                 expect(error).toEqual(Error("Could not create message"));
             });
         });
+        it("fails passes a message", () => {
+            var Ddq;
+
+            Ddq = new Index(config);
+
+            mock("ddq-backend-mysql", {
+                sendMessage: () => {
+                    return false;
+                }
+            });
+            Ddq.sendMessage("afsdfasdfasdfasdf", (error) => {
+                expect(error).toEqual(Error("Problem with sending message to storage"));
+            });
+        });
     });
     describe(".startHeartbeat()", () => {
         var Ddq;
@@ -116,6 +151,21 @@ describe("tests", () => {
         it("starts and runs", () => {
             Ddq.listen();
             Ddq.startHeartbeat("someRandomMessageIdHash");
+        });
+        it("starts and fails", () => {
+            var listener;
+
+            mock.stop("ddq-backend-mysql");
+            mock("ddq-backend-mysql", {
+                setHeartbeat: () => {
+                    return false;
+                }
+            });
+            listener = Ddq.listen();
+            Ddq.startHeartbeat("someRandomMessageIdHashFail");
+            listener.on("error", (blah) => {
+                expect(blah).toBe(true);
+            });
         });
     });
 });
