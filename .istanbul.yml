@@ -2,4 +2,5 @@ instrumentation:
     excludes:
         - debug/**/*.js
         - spec/**/*.js
+        - lib/index.js
     include-all-sources: true
