@@ -1,170 +1,174 @@
 "use strict";
 
 describe("tests", () => {
-    var config, Index, mock;
+    var config, Ddq, eventsMock, mock, timersMock;
 
     mock = require("mock-require");
     beforeEach(() => {
-        mock("crypto", "../mock/crypto.mock");
-        mock("events", "../mock/event-emitter.mock");
-        mock("timers", "../mock/timers.mock");
+        eventsMock = require("../mock/event-emitter.mock");
+        timersMock = require("../mock/timers.mock");
         mock("ddq-backend-mysql", "../mock/ddq-backend-mysql.mock");
         config = {
             backend: "mysql",
-            pollingRate: 5000,
-            heartbeatRate: 1000
+            backendConfig: {
+                pollingDelay: 5000
+            },
+            heartbeatDelay: 1000,
+            maxProcessingMessages: 2
         };
-        Index = mock.reRequire("../../lib/ddq");
-    });
-    afterEach(() => {
-        mock.stopAll();
+        Ddq = require("../../lib/ddq")(eventsMock, timersMock);
     });
     describe(".constructor()", () => {
         it("can make a new DDQ", () => {
             expect(() => {
                 // eslint-disable-next-line no-unused-vars
-                var Ddq;
+                var ddq;
 
-                Ddq = new Index(config);
+                ddq = new Ddq(config);
             }).not.toThrow();
         });
         it("fails because of no config being passed", () => {
             expect(() => {
                 // eslint-disable-next-line no-unused-vars
-                var Ddq;
+                var ddq;
 
-                Ddq = new Index();
-            }).toThrow("No Config was passed.");
+                ddq = new Ddq();
+            }).toThrow();
         });
     });
     describe(".close()", () => {
-        var Ddq;
+        var ddq;
 
         beforeEach(() => {
-            Ddq = new Index(config);
+            ddq = new Ddq(config);
         });
         it("closes the polling of data", () => {
-            // need to listen first.
-            Ddq.listen();
-            Ddq.close((error) => {
+            ddq.listen();
+            ddq.close((error) => {
                 expect(error).toBe(null);
             });
         });
-    });
-    describe(".finishMessage()", () => {
-        var Ddq;
-
-        beforeEach(() => {
-            Ddq = new Index(config);
-        });
-        it("fdaf", () => {
-            Ddq.finishMessage();
-        });
-    });
-    describe(".getWrappedMessage()", () => {
-        var Ddq;
-
-        beforeEach(() => {
-            Ddq = new Index(config);
-        });
-        it("fdaf", () => {
-            Ddq.getWrappedMessage();
+        it("fails when calling backend to close", () => {
+            ddq.backend.close.andCallFake((callback) => {
+                callback(true);
+            });
+            ddq.listen();
+            ddq.close((error) => {
+                expect(error).toBe(true);
+            });
         });
     });
-    describe(".grabMessage()", () => {
-        var Ddq;
+    describe("destroy", () => {
+        var ddq;
 
         beforeEach(() => {
-            Ddq = new Index(config);
+            ddq = new Ddq(config);
         });
-        it("fdaf", () => {
-            Ddq.grabMessage();
+        it("destroys things", () => {
+            ddq.destroy();
+            expect(ddq.backend.close).toHaveBeenCalled();
+        });
+        it("destroys things 2", () => {
+            ddq.backend.close.andCallFake((callback) => {
+                return callback(new Error("There was a problem."));
+            });
+            ddq.destroy();
+            expect(ddq.backend.close).toHaveBeenCalled();
         });
     });
     describe(".listen()", () => {
-        var Ddq;
+        var called, ddq;
 
         beforeEach(() => {
-            Ddq = new Index(config);
+            ddq = new Ddq(config);
+            called = false;
         });
-        it("listens and gets data", () => {
-            var listener;
-
-            listener = Ddq.listen();
-            listener.on("data", (blah) => {
-                expect(blah).toBe(true);
-            });
+        afterEach(() => {
+            ddq.messagesBeingProcessed = 0;
         });
-        it("listens and does not get data", () => {
-            var listener;
-
-            mock.stop("ddq-backend-mysql");
-            mock("ddq-backend-mysql", {
-                checkForData: () => {
-                    console.log('checkafsdfas');
-                    return false;
-                }
+        it("listens and has reached it's limit", () => {
+            ddq.messagesBeingProcessed = 5;
+            ddq.backend.on.andCallFake((params, callback) => {
+                return callback({
+                    message: "message 1",
+                    heartbeat: jasmine.createSpy("fasdfa").andCallFake((hbCallback) => {
+                        if (!called) {
+                            called = true;
+                            hbCallback(new Error("fasdfasd"));
+                        }
+                    }),
+                    remove: ddq.backend.remove
+                });
             });
-            Index = mock.reRequire("../../lib/ddq");
-            Ddq = new Index(config);
-            listener = Ddq.listen();
+            ddq.listen();
+            expect(ddq.backend.pausePolling).toHaveBeenCalled();
+            expect(ddq.backend.remove).toHaveBeenCalled();
+        });
+        it("resets the increment", () => {
+            ddq.messagesBeingProcessed = 1;
+            ddq.isPausedByUser = false;
+            ddq.isPausedByLimits = true;
+            ddq.listen();
+            expect(ddq.messagesBeingProcessed).toBe(1);
+            expect(ddq.backend.resumePolling).not.toHaveBeenCalled();
+            expect(ddq.backend.remove).toHaveBeenCalled();
+        });
+        // Primarily in place to make sure we get all coverage
+        it("resets the increment and does not resume polling", () => {
+            ddq.messagesBeingProcessed = 1;
+            ddq.isPausedByUser = true;
+            ddq.isPausedByLimits = true;
+            ddq.listen();
+            expect(ddq.messagesBeingProcessed).toBe(1);
+            expect(ddq.backend.resumePolling).not.toHaveBeenCalled();
+            expect(ddq.backend.remove).toHaveBeenCalled();
+        });
+    });
+    describe(".pausePolling()", () => {
+        it("in calling the pause functionality", () => {
+            var ddq;
+
+            ddq = new Ddq(config);
+            ddq.pausePolling();
+        });
+    });
+    describe(".resumesPolling()", () => {
+        var ddq;
+
+        beforeEach(() => {
+            ddq = new Ddq(config);
+        });
+        it("does something", () => {
+            ddq.isPausedByUser = true;
+            ddq.resumePolling();
+            expect(ddq.backend.resumePolling).toHaveBeenCalled();
+        });
+        it("does something not working", () => {
+            ddq.isPausedByUser = false;
+            ddq.resumePolling();
+            expect(ddq.backend.resumePolling).not.toHaveBeenCalled();
+        });
+        it("does something not working", () => {
+            ddq.isPausedByUser = true;
+            ddq.isPausedByLimits = true;
+            ddq.resumePolling();
+            expect(ddq.backend.resumePolling).not.toHaveBeenCalled();
         });
     });
     describe(".sendMessage()", () => {
-        it("fails not passing a message", () => {
-            expect(() => {
-                var Ddq;
-
-                Ddq = new Index(config);
-                Ddq.sendMessage();
-            }).toThrow("No Message passed.");
-        });
-        it("successfully passes a message", () => {
-            var Ddq;
-
-            Ddq = new Index(config);
-            Ddq.sendMessage("errorCreate", (error) => {
-                expect(error).toEqual(Error("Could not create message"));
-            });
-        });
-        it("fails passes a message", () => {
-            var Ddq;
-
-            Ddq = new Index(config);
-
-            mock("ddq-backend-mysql", {
-                sendMessage: () => {
-                    return false;
-                }
-            });
-            Ddq.sendMessage("afsdfasdfasdfasdf", (error) => {
-                expect(error).toEqual(Error("Problem with sending message to storage"));
-            });
-        });
-    });
-    describe(".startHeartbeat()", () => {
-        var Ddq;
+        var ddq;
 
         beforeEach(() => {
-            Ddq = new Index(config);
+            ddq = new Ddq(config);
         });
-        it("starts and runs", () => {
-            Ddq.listen();
-            Ddq.startHeartbeat("someRandomMessageIdHash");
-        });
-        it("starts and fails", () => {
-            var listener;
-
-            mock.stop("ddq-backend-mysql");
-            mock("ddq-backend-mysql", {
-                setHeartbeat: () => {
-                    return false;
-                }
+        it("sends successfully", () => {
+            ddq.sendMessage("messageSuccess", (err) => {
+                expect(err).toEqual();
             });
-            listener = Ddq.listen();
-            Ddq.startHeartbeat("someRandomMessageIdHashFail");
-            listener.on("error", (blah) => {
-                expect(blah).toBe(true);
+        });
+        it("does not send successfully", () => {
+            ddq.sendMessage("messageFailure", (err) => {
+                expect(err).toEqual(jasmine.any(Error));
             });
         });
     });

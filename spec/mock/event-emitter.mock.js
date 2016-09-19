@@ -17,7 +17,15 @@ class EventEmitterMock {
             this[methodName] = jasmine.createSpy(methodName);
         });
         this.addListener.andCallFake(() => {});
-        this.emit.andCallFake(() => {});
+        this.emit.andCallFake((event, params, callback) => {
+            if (typeof params === "function") {
+                callback = params;
+            }
+
+            if (callback && typeof callback === "function") {
+                callback();
+            }
+        });
         this.removeListener.andCallFake(() => {});
         this.on.andCallFake((event, callback) => {
             callback(true);

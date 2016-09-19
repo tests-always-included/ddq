@@ -4,32 +4,60 @@ module.exports = function () {
     var mock;
 
     mock = jasmine.createSpyObj("mockBackend", [
-        "checkForData",
-        "getWrappedMessage",
-        "grabMessage",
+        "close",
+        "listen",
+        "pausePolling",
         "sendMessage",
-        "setHeartbeat"
+        "on",
+        "emit",
+        "resumePolling",
+        "requeue",
+        "remove"
     ]);
-    mock.checkForData.andCallFake(() => {
-        return true;
+    mock.called = false;
+    mock.close.andCallFake((callback) => {
+        callback(null);
     });
-    mock.getWrappedMessage.andCallFake(() => {
-        return {
-            id: "something"
-        };
+    mock.listen.andCallFake(() => {
+        mock.emit("data");
     });
-    mock.grabMessage.andCallFake(() => {
+    mock.pausePolling.andCallFake(() => {
 
     });
-    mock.sendMessage.andCallFake(() => {
+    mock.resumePolling.andCallFake(() => {
 
     });
-    mock.setHeartbeat.andCallFake((params) => {
-        if (params.id === "someRandomMessageIdHashFail") {
-            return false;
+    mock.sendMessage.andCallFake((message, callback) => {
+        if (message === "messageFailure") {
+            return callback(new Error("fasdfasd"));
         }
 
-        return true;
+        return callback();
+    });
+    mock.on.andCallFake((event, callback) => {
+        var params;
+
+        switch (event) {
+        case "data":
+            params = {
+                heartbeat: jasmine.createSpy("fasdfasd").andCallFake((hbCallback) => {
+                    if (!mock.called) {
+                        mock.called = true;
+                        hbCallback(false);
+                    }
+                }),
+                message: "someMessage",
+                requeue: mock.requeue,
+                remove: mock.remove
+            };
+            break;
+
+        default:
+            params = null;
+            break;
+        }
+
+        return callback(params);
     });
 
     return mock;
