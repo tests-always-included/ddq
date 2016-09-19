@@ -40,14 +40,13 @@ ddq.on("data", (data, callback) => {
 ddq.on("error", () => {
     console.log("Oh my there has been an error!");
 });
-
- timers.setInterval(() => {
+timers.setInterval(() => {
     var count, maxNumberOfMessages;
 
     count = 0;
     maxNumberOfMessages = 5;
     console.log("Flooding instance with data...");
-    for(count; count < maxNumberOfMessages; count += 1) {
+    for (count; count < maxNumberOfMessages; count += 1) {
         i += 1;
         ddq.sendMessage(`message_${i}`, () => {
         });
