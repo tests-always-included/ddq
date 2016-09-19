@@ -5,14 +5,14 @@ module.exports = function () {
 
     mock = jasmine.createSpyObj("mockBackend", [
         "close",
+        "emit",
         "listen",
+        "on",
         "pausePolling",
         "sendMessage",
-        "on",
-        "emit",
-        "resumePolling",
         "requeue",
-        "remove"
+        "remove",
+        "resumePolling"
     ]);
     mock.called = false;
     mock.close.andCallFake((callback) => {
@@ -20,19 +20,6 @@ module.exports = function () {
     });
     mock.listen.andCallFake(() => {
         mock.emit("data");
-    });
-    mock.pausePolling.andCallFake(() => {
-
-    });
-    mock.resumePolling.andCallFake(() => {
-
-    });
-    mock.sendMessage.andCallFake((message, callback) => {
-        if (message === "messageFailure") {
-            return callback(new Error("fasdfasd"));
-        }
-
-        return callback();
     });
     mock.on.andCallFake((event, callback) => {
         var params;
@@ -58,6 +45,13 @@ module.exports = function () {
         }
 
         return callback(params);
+    });
+    mock.sendMessage.andCallFake((message, callback) => {
+        if (message === "messageFailure") {
+            return callback(new Error("fasdfasd"));
+        }
+
+        return callback();
     });
 
     return mock;

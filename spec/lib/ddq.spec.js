@@ -48,7 +48,7 @@ describe("tests", () => {
                 expect(error).toBe(null);
             });
         });
-        it("fails when calling backend to close", () => {
+        it("fails closing the polling when calling backend to close", () => {
             ddq.backend.close.andCallFake((callback) => {
                 callback(true);
             });
@@ -58,17 +58,17 @@ describe("tests", () => {
             });
         });
     });
-    describe("destroy", () => {
+    describe(".destroy()", () => {
         var ddq;
 
         beforeEach(() => {
             ddq = new Ddq(config);
         });
-        it("destroys things", () => {
+        it("calls the backend to close and is successful", () => {
             ddq.destroy();
             expect(ddq.backend.close).toHaveBeenCalled();
         });
-        it("destroys things 2", () => {
+        it("calls the backend to close and the backend fails", () => {
             ddq.backend.close.andCallFake((callback) => {
                 return callback(new Error("There was a problem."));
             });
@@ -86,7 +86,7 @@ describe("tests", () => {
         afterEach(() => {
             ddq.messagesBeingProcessed = 0;
         });
-        it("listens and has reached it's limit", () => {
+        it("reached its limit", () => {
             ddq.messagesBeingProcessed = 5;
             ddq.backend.on.andCallFake((params, callback) => {
                 return callback({
@@ -138,17 +138,17 @@ describe("tests", () => {
         beforeEach(() => {
             ddq = new Ddq(config);
         });
-        it("does something", () => {
+        it("has conditions to resume polling", () => {
             ddq.isPausedByUser = true;
             ddq.resumePolling();
             expect(ddq.backend.resumePolling).toHaveBeenCalled();
         });
-        it("does something not working", () => {
+        it("is paused by user and will not resume", () => {
             ddq.isPausedByUser = false;
             ddq.resumePolling();
             expect(ddq.backend.resumePolling).not.toHaveBeenCalled();
         });
-        it("does something not working", () => {
+        it("is paused by user and limits and will not resume", () => {
             ddq.isPausedByUser = true;
             ddq.isPausedByLimits = true;
             ddq.resumePolling();
