@@ -10,8 +10,7 @@
     "ddq-backend-mock": "git://github.com/AbsentSemicolon/ddq-backend-mock.git#develop",
     "eslint": "^2.10.2",
     "istanbul": "^0.4.5",
-    "jasmine-node": "^1.14.5",
-    "mock-require": "^1.3.0"
+    "jasmine-node": "^1.14.5"
   },
   "engines": {
     "node": "*"
