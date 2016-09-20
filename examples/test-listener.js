@@ -11,7 +11,6 @@ config = {
         port: "3306",
         pollingDelay: 5000
     },
-    hostname: "localhost",
     heartbeatDelay: 1000,
     maxProcessingMessages: 10
 };
