@@ -66,6 +66,7 @@ describe("tests", () => {
 
             ddq = new Ddq(config);
             ddq.backend.close = jasmine.createSpy("ddq.backend.close");
+            ddq.listen();
             ddq.destroy();
             expect(ddq.backend.close).toHaveBeenCalled();
         });
@@ -81,7 +82,7 @@ describe("tests", () => {
             ddq.listen();
             ddq.destroy();
         });
-        it("calls the backend to close and the backend fails", (done) => {
+        it("calls the backend to close and the backend returns false", (done) => {
             var ddq;
 
             ddq = new Ddq(config);
