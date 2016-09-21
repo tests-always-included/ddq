@@ -9,14 +9,19 @@ DeDuplicated Queue (DDQ)
 About
 -----
 
-This module was created because of the need of a system which acts like a queue for tasks but doesn't allow for duplication of the tasks. This uses an `async` methodiology to complete certain tasks like sending message and what happens when data is found to process. We used `callbacks` to make the process faster and easier to get around than using promises; which are good in their own right.
+This module was created because for the need of a system which acts like a queue for tasks but doesn't allow for duplication of those tasks. DDQ uses an `async` methodology to complete certain tasks, like sending messages and what happens when data is found to process. We used `callbacks` instead of `promises` to make the process faster and easier to get around around.
 
-A couple terms which are used in these docs and could be within the code are `producer` and `comsumer`. The `producer` is the thing creating the jobs as in the one which sends messages to DDQ to put into the Queue. The `consumer` is the oppisite. This is a server or something `listening` to DDQ to see if there are any tasks for it to take action on. Keep these in mind when working with DDQ.
+DDQ also extends the Event Emitter module so it's very easy to use events for when there is data or error has occured and inform the software of these events.
+
+A couple terms which are used in these docs and could be within the code are `producer` and `consumer`. The `producer` is the software creating tasks; the one which sends messages to DDQ to put into the Queue. The `consumer` is the opposite. This is another piece of software `listening` to DDQ to see if there are any tasks for it to take action on.
 
 Usage
 -----
 
-### Setting Up
+Using DDQ is seprated into parts and each component of it is strict on what it does. The `producer` and `consumer` we've already talked about. So there is DDQ and it's `backend` left. DDQ's job is to take messages and commands from the user and relays to the `backend` to do something. DDQ also handles certain business logic like being paused when too many messages are in flight or if the user wants to stop polling for a time. The `backend` has the job of doing what DDQ tells it to do, but could also be responsible for polling for messages emitting when it's found one and cleaning up tasks.
+
+Setting Up
+----------
 
 Setting up DDQ is pretty straight forward. It does require some configuration to get everything working together. Your project would need to include DDQ in it's `package.json` and also include a `backend` module or write one yourself. In the `config` value for `backend` this will set what module you're using. In the code this looks for `ddq-backend-whatYouHaveInConfigValueForBackend`. This should be in your `node_modules` directory so it's easily used.
 
@@ -46,7 +51,8 @@ Other config values would be more specific for what your backend needs, like tab
         maxProcessingMessages: 10
     });
 
-### Sending a Message
+Sending a Message
+-----------------
 
 A producer would be one to send a message. Using the `sendMessage` method you would send in the `message` you want to use and a `callback`. The callback is a way to handle when the `message` is successfully added to the queue, or not.
 
@@ -56,7 +62,8 @@ A producer would be one to send a message. Using the `sendMessage` method you wo
         }
     });
 
-### Listening
+Listening
+---------
 
 Once you have an instance of DDQ, you then need to `listen` to events which will be emitted from it. DDQ will send two types of events, `data` and `error`. When `data` is emitted you'll receive a message from the queue and a `callback` from DDQ. Once the process is complete you'll need to call the `callback` with an argument whether there was an error when processing.
 
@@ -81,19 +88,25 @@ The other event DDQ will emit is `error`. This alerts the code listening there w
         // Take action on the error.
     });
 
-### Pausing
+Pausing
+-------
+
 At a point your consumer might want to pause the polling of messages so it can do a task without having messages coming at it. You can do this by simply calling a method withing DDQ called `pausePolling`. This only works well if you are listening. This also sets the flag `pausedByUser` within your instance of DDQ.  This doesn't use a `callback`, for if there is an error it should be emitted and picked up by the `listener`.
 
     // Tells the backend to stop polling.
     deduplicatedQueue.pausePolling();
 
-### Resume Polling
+Resume Polling
+--------------
+
 Once you feel you should resume polling you can call the `resumePolling` method. This will set the flag `pausedByUser` back to false and check if the `pausedByLimits` flag was set before telling the `backend` to resume it's polling. We don't want to resume polling if the limit has been reached. This also doesn't use a `callback`, for if there is an error it should be emitted and picked up by the `listener`.
 
     // Telle the backend to resume polling.
     deduplicatedQueue.resumePolling();
 
-### Closing
+Closing
+-------
+
 At some time you'll want to stop listening to DDQ which you will call `close`. This will call the backend to close it's connections and emitting.
 
     // Stop listening to events and close the connection to the database.
