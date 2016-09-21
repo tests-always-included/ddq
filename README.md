@@ -1,6 +1,11 @@
 DeDuplicated Queue (DDQ)
 ========================
 
+[![Build Status][travis-image]][Travis CI]
+[![Dependencies][dependencies-image]][Dependencies]
+[![Dev Dependencies][devdependencies-image]][Dev Dependencies]
+[![codecov.io][codecov-image]][Code Coverage]
+
 About
 -----
 
@@ -21,16 +26,15 @@ Usage
             password: "someReallyNiceLongSecurePassword",
             port: 3306,
             user: "hopefullyNotRoot"
-        }
+        },
+        heartbeatDelay: 1000,
+        maxProcessingMessages: 10
     });
 
     // This gives your code access to the functions.
 
-    // Sends the message to the queue backend. This autom
-    deduplicatedQueue.sendMessage(anything, callback);
-
-    // Gets the message from the queue backend to use in your consumer.
-    deduplicatedQueue.getWrappedMessage();
+    // Sends the message to the queue backend plugin specified.
+    deduplicatedQueue.sendMessage("sample message", callback);
 
     // Starts listening for events.
     deduplicatedQueue.listen();
@@ -39,5 +43,18 @@ Usage
     deduplicatedQueue.close();
 
     // DDQ uses event emitters and you'll need to listen for them so your applications can take actions.
-    deduplicatedQueue.on("data", callback(err));
+    deduplicatedQueue.on("data", (data, callback) => {
+        // Do event work
+
+    });
+
     deduplicatedQueue.on("error", callback(err));
+
+[Code Coverage]: https://codecov.io/github/tests-always-included/ddq?branch=master
+[codecov-image]: https://codecov.io/github/tests-always-included/ddq/coverage.svg?branch=master
+[Dev Dependencies]: https://david-dm.org/tests-always-included/ddq#info=devDependencies
+[devdependencies-image]: https://david-dm.org/tests-always-included/ddq/dev-status.png
+[Dependencies]: https://david-dm.org/tests-always-included/ddq
+[dependencies-image]: https://david-dm.org/tests-always-included/ddq.png
+[travis-image]: https://secure.travis-ci.org/tests-always-included/ddq.png
+[Travis CI]: http://travis-ci.org/tests-always-included/ddq
