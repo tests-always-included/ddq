@@ -65,7 +65,7 @@ describe("tests", () => {
             var ddq;
 
             ddq = new Ddq(config);
-            ddq.backend.close = jasmine.createSpy("backend.close");
+            ddq.backend.close = jasmine.createSpy("ddq.backend.close");
             ddq.destroy();
             expect(ddq.backend.close).toHaveBeenCalled();
         });
@@ -85,10 +85,11 @@ describe("tests", () => {
             var ddq;
 
             ddq = new Ddq(config);
-            ddq.backend.close = jasmine.createSpy("backend.close").andCallFake((callback) => {
-                callback(false);
-                done();
-            });
+            ddq.backend.close = jasmine.createSpy("ddq.backend.close")
+                .andCallFake((callback) => {
+                    callback(false);
+                    done();
+                });
             ddq.on("error", (err) => {
                 expect(err).toEqual(false);
                 done();
@@ -102,7 +103,7 @@ describe("tests", () => {
             var ddq;
 
             ddq = new Ddq(config);
-            ddq.backend.listen = jasmine.createSpy("backend.listen");
+            ddq.backend.listen = jasmine.createSpy("ddq.backend.listen");
             ddq.listen();
             expect(ddq.backend.listen).toHaveBeenCalled();
         });
@@ -154,7 +155,7 @@ describe("tests", () => {
             var emitted;
 
             emitted = false;
-            ddq.backend.pausePolling = jasmine.createSpy("backend.pausePolling");
+            ddq.backend.pausePolling = jasmine.createSpy("ddq.backend.pausePolling");
             ddq.on("data", (message, callback) => {
                 emitted = true;
                 expect(message).toBe("mock message");
@@ -205,7 +206,7 @@ describe("tests", () => {
             expect(ddq.isPausedByLimits).toBe(false);
             done();
         });
-        it("does things", (done) => {
+        it("requeues when too many processes are going", (done) => {
             ddq = null;
 
             ddq = new Ddq(config);
@@ -226,15 +227,16 @@ describe("tests", () => {
             expect(ddq.isPausedByLimits).toBe(true);
             done();
         });
-        it("sets the polling is paused in the process of doing heartbeat", (done) => {
+        it("sets the polling is paused in the process of doing a heartbeat", (done) => {
             ddq = null;
-            wrappedMessage.heartbeat = jasmine.createSpy("heartbeat").andCallFake((hbCallback) => {
-                ddq.isPausedByUser = true;
-                if (!wrappedMessage.called) {
-                    wrappedMessage.called = true;
-                    hbCallback();
-                }
-            });
+            wrappedMessage.heartbeat = jasmine.createSpy("wrappedMessage.heartbeat")
+                .andCallFake((hbCallback) => {
+                    ddq.isPausedByUser = true;
+                    if (!wrappedMessage.called) {
+                        wrappedMessage.called = true;
+                        hbCallback();
+                    }
+                });
             ddq = new Ddq(config);
             ddq.messagesBeingProcessed = 1;
             ddq.isPausedByLimits = false;
@@ -271,7 +273,6 @@ describe("tests", () => {
             wrappedMessage = mockRequire.reRequire("../mock/wrapped-message-mock");
             ddq = new Ddq(config);
             ddq.listen();
-
         });
         it("gets a good heartbeat", (done) => {
             var errorCalled;
@@ -307,17 +308,16 @@ describe("tests", () => {
             expect(wrappedMessage.remove).toHaveBeenCalled();
             expect(errorCalled).toBe(true);
         });
-        it("gets a bad 2 heartbeat", (done) => {
+
+        // Primarily for coverage of branches.
+        it("gets a heartbeat where false was passed to callback", (done) => {
             wrappedMessage.heartbeat = jasmine.createSpy("wrappedMessage.heartbeat")
                 .andCallFake((hbCallback) => {
                     if (!wrappedMessage.called) {
                         wrappedMessage.called = true;
                         hbCallback(false);
                     }
-            });
-            ddq.on("error", () => {
-                done();
-            });
+                });
             ddq.on("data", (message, callback) => {
                 callback(true);
                 done();
@@ -349,7 +349,7 @@ describe("tests", () => {
 
         beforeEach(() => {
             ddq = new Ddq(config);
-            ddq.backend.resumePolling = jasmine.createSpy("backend.resumePolling");
+            ddq.backend.resumePolling = jasmine.createSpy("ddq.backend.resumePolling");
         });
         it("has conditions to resume polling", () => {
             ddq.pausePolling();
