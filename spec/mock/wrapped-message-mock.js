@@ -21,8 +21,4 @@ mock.heartbeat.andCallFake((hbCallback) => {
     }
 });
 mock.message = "mock message";
-mock.requeue.andCallFake(() => {
-});
-mock.remove.andCallFake(() => {
-});
 module.exports = mock;

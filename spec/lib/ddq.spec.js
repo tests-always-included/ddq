@@ -1,8 +1,9 @@
 "use strict";
 
 describe("tests", () => {
-    var config, Ddq, events, timersMock;
+    var config, Ddq, events, mockRequire, timersMock;
 
+    mockRequire = require("mock-require");
     beforeEach(() => {
         events = require("events");
         timersMock = require("../mock/timers.mock");
@@ -64,7 +65,7 @@ describe("tests", () => {
             var ddq;
 
             ddq = new Ddq(config);
-            ddq.backend.close = jasmine.createSpy("fasdfa");
+            ddq.backend.close = jasmine.createSpy("backend.close");
             ddq.destroy();
             expect(ddq.backend.close).toHaveBeenCalled();
         });
@@ -80,6 +81,21 @@ describe("tests", () => {
             ddq.listen();
             ddq.destroy();
         });
+        it("calls the backend to close and the backend fails", (done) => {
+            var ddq;
+
+            ddq = new Ddq(config);
+            ddq.backend.close = jasmine.createSpy("backend.close").andCallFake((callback) => {
+                callback(false);
+                done();
+            });
+            ddq.on("error", (err) => {
+                expect(err).toEqual(false);
+                done();
+            });
+            ddq.listen();
+            ddq.destroy();
+        });
     });
     describe(".listen()", () => {
         it("starts listening on the backend", () => {
@@ -89,9 +105,6 @@ describe("tests", () => {
             ddq.backend.listen = jasmine.createSpy("backend.listen");
             ddq.listen();
             expect(ddq.backend.listen).toHaveBeenCalled();
-        });
-        it("reports failure when the backend has a problem", () => {
-            // yeah
         });
     });
     describe("error event", () => {
@@ -136,23 +149,6 @@ describe("tests", () => {
             expect(wrappedMessage.requeue).toHaveBeenCalled();
             expect(failed).toBe(false);
             done();
-        });
-        it("gets a bad heartbeat", (done) => {
-            var errorCalled;
-
-            errorCalled = false;
-            ddq.on("error", () => {
-                errorCalled = true;
-                done();
-            });
-            ddq.on("data", (message, callback) => {
-                callback(true);
-                done();
-            });
-            wrappedMessage.heartbeatError = true;
-            ddq.backend.emit("data", wrappedMessage);
-            expect(wrappedMessage.requeue).toHaveBeenCalled();
-            expect(errorCalled).toBe(true);
         });
         it("pauses when reaching its limit", (done) => {
             var emitted;
@@ -209,6 +205,50 @@ describe("tests", () => {
             expect(ddq.isPausedByLimits).toBe(false);
             done();
         });
+        it("does things", (done) => {
+            ddq = null;
+
+            ddq = new Ddq(config);
+            ddq.messagesBeingProcessed = 5;
+            ddq.isPausedByLimits = false;
+            ddq.on("error", (callback) => {
+                callback();
+                done();
+            });
+            ddq.on("data", (message, callback) => {
+                callback();
+                done();
+            });
+            ddq.listen();
+            ddq.backend.emit("data", wrappedMessage);
+            expect(ddq.messagesBeingProcessed).toBe(5);
+            expect(wrappedMessage.requeue).toHaveBeenCalled();
+            expect(ddq.isPausedByLimits).toBe(true);
+            done();
+        });
+        it("sets the polling is paused in the process of doing heartbeat", (done) => {
+            ddq = null;
+            wrappedMessage.heartbeat = jasmine.createSpy("heartbeat").andCallFake((hbCallback) => {
+                ddq.isPausedByUser = true;
+                if (!wrappedMessage.called) {
+                    wrappedMessage.called = true;
+                    hbCallback();
+                }
+            });
+            ddq = new Ddq(config);
+            ddq.messagesBeingProcessed = 1;
+            ddq.isPausedByLimits = false;
+            ddq.on("data", (message, callback) => {
+                callback();
+                done();
+            });
+            ddq.listen();
+            ddq.backend.emit("data", wrappedMessage);
+            expect(ddq.messagesBeingProcessed).toBe(1);
+            expect(wrappedMessage.requeue).toHaveBeenCalled();
+            expect(ddq.isPausedByLimits).toBe(false);
+            done();
+        });
         it("removes the message but emits the callback was done repeatedly", (done) => {
             ddq.on("error", (err) => {
                 expect(err).toEqual(jasmine.any(Error));
@@ -221,6 +261,70 @@ describe("tests", () => {
             });
             ddq.backend.emit("data", wrappedMessage);
             expect(wrappedMessage.remove).toHaveBeenCalled();
+        });
+    });
+    describe("heartbeat", () => {
+        var ddq, wrappedMessage;
+
+        beforeEach(() => {
+            config.backendConfig.noPolling = true;
+            wrappedMessage = mockRequire.reRequire("../mock/wrapped-message-mock");
+            ddq = new Ddq(config);
+            ddq.listen();
+
+        });
+        it("gets a good heartbeat", (done) => {
+            var errorCalled;
+
+            errorCalled = false;
+            ddq.on("error", () => {
+                errorCalled = true;
+                done();
+            });
+            ddq.on("data", (message, callback) => {
+                callback();
+                done();
+            });
+            ddq.backend.emit("data", wrappedMessage);
+            expect(wrappedMessage.remove).toHaveBeenCalled();
+            expect(errorCalled).toBe(false);
+        });
+        it("gets a bad heartbeat", (done) => {
+            var errorCalled;
+
+            errorCalled = false;
+
+            ddq.on("error", () => {
+                errorCalled = true;
+                done();
+            });
+            ddq.on("data", (message, callback) => {
+                callback();
+                done();
+            });
+            wrappedMessage.heartbeatError = true;
+            ddq.backend.emit("data", wrappedMessage);
+            expect(wrappedMessage.remove).toHaveBeenCalled();
+            expect(errorCalled).toBe(true);
+        });
+        it("gets a bad 2 heartbeat", (done) => {
+            wrappedMessage.heartbeat = jasmine.createSpy("wrappedMessage.heartbeat")
+                .andCallFake((hbCallback) => {
+                    if (!wrappedMessage.called) {
+                        wrappedMessage.called = true;
+                        hbCallback(false);
+                    }
+            });
+            ddq.on("error", () => {
+                done();
+            });
+            ddq.on("data", (message, callback) => {
+                callback(true);
+                done();
+            });
+            wrappedMessage.heartbeatError = true;
+            ddq.backend.emit("data", wrappedMessage);
+            expect(wrappedMessage.requeue).toHaveBeenCalled();
         });
     });
     describe(".pausePolling()", () => {
