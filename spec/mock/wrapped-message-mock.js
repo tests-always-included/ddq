@@ -4,10 +4,12 @@ var mock;
 
 mock = jasmine.createSpyObj("wrappedMessageMock", [
     "heartbeat",
-    "requeue",
-    "remove"
+    "heartbeatKill",
+    "remove",
+    "requeue"
 ]);
 mock.heartbeatError = false;
+mock.heartbeatKillError = false;
 mock.called = false;
 mock.heartbeat.andCallFake((hbCallback) => {
     if (!mock.called) {

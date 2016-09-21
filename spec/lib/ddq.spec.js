@@ -148,6 +148,7 @@ describe("tests", () => {
             ddq.pausePolling();
             ddq.backend.emit("data", wrappedMessage);
             expect(wrappedMessage.requeue).toHaveBeenCalled();
+            expect(wrappedMessage.heartbeatKill).not.toHaveBeenCalled();
             expect(failed).toBe(false);
             done();
         });
@@ -168,6 +169,7 @@ describe("tests", () => {
             expect(emitted).toBe(true);
             expect(wrappedMessage.requeue).toHaveBeenCalled();
             expect(wrappedMessage.remove).not.toHaveBeenCalled();
+            expect(wrappedMessage.heartbeatKill).not.toHaveBeenCalled();
         });
         it("removes on success", (done) => {
             ddq.on("data", (message, callback) => {
@@ -184,6 +186,7 @@ describe("tests", () => {
             });
             ddq.backend.emit("data", wrappedMessage);
             expect(wrappedMessage.requeue).toHaveBeenCalled();
+            expect(wrappedMessage.heartbeatKill).toHaveBeenCalled();
         });
         it("resets the increment and does not resume polling", (done) => {
             ddq = null;
@@ -202,6 +205,7 @@ describe("tests", () => {
             ddq.listen();
             ddq.backend.emit("data", wrappedMessage);
             expect(ddq.messagesBeingProcessed).toBe(1);
+            expect(wrappedMessage.heartbeatKill).toHaveBeenCalled();
             expect(wrappedMessage.requeue).toHaveBeenCalled();
             expect(ddq.isPausedByLimits).toBe(false);
             done();
@@ -223,6 +227,7 @@ describe("tests", () => {
             ddq.listen();
             ddq.backend.emit("data", wrappedMessage);
             expect(ddq.messagesBeingProcessed).toBe(5);
+            expect(wrappedMessage.heartbeatKill).toHaveBeenCalled();
             expect(wrappedMessage.requeue).toHaveBeenCalled();
             expect(ddq.isPausedByLimits).toBe(true);
             done();
@@ -248,6 +253,7 @@ describe("tests", () => {
             ddq.backend.emit("data", wrappedMessage);
             expect(ddq.messagesBeingProcessed).toBe(1);
             expect(wrappedMessage.requeue).toHaveBeenCalled();
+            expect(wrappedMessage.heartbeatKill).toHaveBeenCalled();
             expect(ddq.isPausedByLimits).toBe(false);
             done();
         });
