@@ -6,7 +6,7 @@ describe("tests", () => {
     mockRequire = require("mock-require");
     beforeEach(() => {
         events = require("events");
-        timersMock = require("../mock/timers.mock");
+        timersMock = require("../mock/timers-mock");
         config = {
             backend: "mock",
             backendConfig: {
