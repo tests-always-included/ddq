@@ -2,7 +2,7 @@
 
 var mock;
 
-mock = jasmine.createSpyObj("mockTimers", [
+mock = jasmine.createSpyObj("timersMock", [
     "clearInterval",
     "clearTimeout",
     "setInterval",

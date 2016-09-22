@@ -197,9 +197,6 @@ describe("tests", () => {
             expect(wrappedMessage.heartbeatKill).toHaveBeenCalled();
         });
         it("resets the increment and does not resume polling", (done) => {
-            ddq = null;
-
-            ddq = new Ddq(config);
             ddq.messagesBeingProcessed = 1;
             ddq.isPausedByLimits = true;
             ddq.on("error", (callback) => {
@@ -219,9 +216,6 @@ describe("tests", () => {
             done();
         });
         it("requeues when too many processes are going", (done) => {
-            ddq = null;
-
-            ddq = new Ddq(config);
             ddq.messagesBeingProcessed = 5;
             ddq.isPausedByLimits = false;
             ddq.on("error", (callback) => {
@@ -240,8 +234,7 @@ describe("tests", () => {
             expect(ddq.isPausedByLimits).toBe(true);
             done();
         });
-        it("sets the polling is paused in the process of doing a heartbeat", (done) => {
-            ddq = null;
+        it("sets isPausedByUser in the process of doing a heartbeat", (done) => {
             wrappedMessage.heartbeat = jasmine.createSpy("wrappedMessage.heartbeat")
                 .andCallFake((hbCallback) => {
                     ddq.isPausedByUser = true;
@@ -250,7 +243,6 @@ describe("tests", () => {
                         hbCallback();
                     }
                 });
-            ddq = new Ddq(config);
             ddq.messagesBeingProcessed = 1;
             ddq.isPausedByLimits = false;
             ddq.on("data", (message, callback) => {
@@ -265,7 +257,7 @@ describe("tests", () => {
             expect(ddq.isPausedByLimits).toBe(false);
             done();
         });
-        it("removes the message but emits the callback was done repeatedly", (done) => {
+        it("removes the message but emits that the callback was done repeatedly", (done) => {
             ddq.on("error", (err) => {
                 expect(err).toEqual(jasmine.any(Error));
                 done();
@@ -280,18 +272,16 @@ describe("tests", () => {
         });
     });
     describe("heartbeat", () => {
-        var ddq, wrappedMessage;
+        var ddq, errorCalled, wrappedMessage;
 
         beforeEach(() => {
+            errorCalled = false;
             config.backendConfig.noPolling = true;
             wrappedMessage = mockRequire.reRequire("../mock/wrapped-message-mock");
             ddq = new Ddq(config);
             ddq.listen();
         });
         it("gets a good heartbeat", (done) => {
-            var errorCalled;
-
-            errorCalled = false;
             ddq.on("error", () => {
                 errorCalled = true;
                 done();
@@ -305,10 +295,6 @@ describe("tests", () => {
             expect(errorCalled).toBe(false);
         });
         it("gets a bad heartbeat", (done) => {
-            var errorCalled;
-
-            errorCalled = false;
-
             ddq.on("error", () => {
                 errorCalled = true;
                 done();
