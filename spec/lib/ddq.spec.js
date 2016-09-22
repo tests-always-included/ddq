@@ -56,6 +56,13 @@ describe("tests", () => {
                 done();
             });
         });
+        it("fails closing the polling when calling backend to close", () => {
+            var ddq;
+
+            ddq = new Ddq(config);
+            ddq.listen();
+            ddq.close();
+        });
     });
     describe(".destroy()", () => {
         beforeEach(() => {
@@ -395,6 +402,13 @@ describe("tests", () => {
                 expect(err).toEqual(jasmine.any(Error));
                 done();
             });
+        });
+        it("reports errors", () => {
+            var ddq;
+
+            config.backendConfig.sendFail = true;
+            ddq = new Ddq(config);
+            ddq.sendMessage("message");
         });
     });
 });
