@@ -18,7 +18,7 @@ A couple terms which are used in these docs and could be within the code are `pr
 Usage
 -----
 
-DDQ is separated into parts and each component of it is strict on what it does. The `producer` and `consumer` we've already talked about. So there is DDQ and it's `backend` left. DDQ's job is to take messages and commands from the user and relays to the `backend` to do something. DDQ also handles certain business logic like being paused when too many messages are in flight or if the user wants to stop polling for a time. The `backend` has the job of doing what DDQ tells it to do, but could also be responsible for polling for messages emitting when it's found one and cleaning up tasks.
+DDQ is separated into parts and each component of it is strict on what it does. DDQ's job is to take messages and commands from the user and relays to the `backend` to do something. DDQ also handles certain business logic like being paused when too many messages are in flight or if the user wants to stop polling for a time. The `backend` has the job of doing what DDQ tells it to do, but could also be responsible for polling for messages emitting when it's found one and cleaning up tasks.
 
 Setting Up
 ----------
@@ -70,7 +70,7 @@ Once you have an instance of DDQ, you then need to `listen` to events which will
 
 When the `data` event is triggered from the backend DDQ will use methods on the data received from the `backend`. These methods include: `heartbeat`, `heartbeatKill`, `requeue`, and `remove`. The only piece of information the software running DDQ will receive is the message and the callback from DDQ in order to say whether the processing of the message was successful or not. When the message is being processed DDQ with call the `heartbeat` method on the `wrappedMessage` using `heartbeatDelay` from the config to tell the `backend` to update the heartbeat at that interval.
 
-When the `data` is done processing the callback will be called and DDQ will take action whether the software told it was successful or not. First the `heartbeatKill` method will be called. This tells the `backend` DDQ is done processing. When not successful the message needs to be requeued. This of course uses the `requeue` method. When the message is successful, we don't need it hanging around and thus the `remove` method is invoked. Since there is the separation or work, DDQ doesn't care what the `backend` does with these commands, just that it called them when appropriate.
+When the `data` is done processing the callback will be called and DDQ will take action whether the software told it was successful or not. First the `heartbeatKill` method will be called. This tells the `backend` DDQ is done processing. When not successful the message needs to be requeued. This of course uses the `requeue` method. When the message is successful, we don't need it hanging around and thus the `remove` method is invoked. Since there is the separation of work, DDQ doesn't care what the `backend` does with these commands, just that it called them when appropriate.
 
 
     // Starts listening for events.
