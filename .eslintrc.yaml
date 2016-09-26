@@ -167,7 +167,10 @@ rules:
     object-curly-spacing: error
     object-property-newline: error
     object-shorthand: error
-    one-var: error
+    one-var:
+        - error
+        -
+            const: never
     operator-assignment: error
     operator-linebreak:
         - error
