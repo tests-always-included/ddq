@@ -1,26 +1,26 @@
 "use strict";
 
-var mock;
+module.exports = () => {
+    var mock;
 
-mock = jasmine.createSpyObj("wrappedMessageMock", [
-    "heartbeat",
-    "heartbeatKill",
-    "remove",
-    "requeue"
-]);
-mock.heartbeatError = false;
-mock.heartbeatKillError = false;
-mock.called = false;
-mock.heartbeat.andCallFake((hbCallback) => {
-    if (!mock.called) {
-        mock.called = true;
-
-        if (mock.heartbeatError) {
-            hbCallback(new Error("Could not do heartbeat."));
-        } else {
-            hbCallback();
+    mock = jasmine.createSpyObj("wrappedMessageMock", [
+        "heartbeat",
+        "remove",
+        "requeue"
+    ]);
+    mock.heartbeat.andCallFake((hbCallback) => {
+        if (mock.heartbeat.callCount === 1) {
+            if (mock.heartbeatError) {
+                hbCallback(new Error("Could not do heartbeat."));
+            } else {
+                hbCallback();
+            }
         }
-    }
-});
-mock.message = "mock message";
-module.exports = mock;
+    });
+    mock.heartbeatError = false;
+    mock.message = "mock message";
+    mock.remove.andCallFake(() => {});
+    mock.requeue.andCallFake(() => {});
+
+    return mock;
+};
