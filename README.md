@@ -6,6 +6,7 @@ DeDuplicated Queue (DDQ)
 [![Dev Dependencies][devdependencies-image]][Dev Dependencies]
 [![codecov.io][codecov-image]][Code Coverage]
 
+
 About
 -----
 
@@ -13,27 +14,13 @@ This module was created because of a need for a system which acts like a queue f
 
 DDQ also extends the Event Emitter module so it's very easy to use events for when there is a message or an error has occured and inform the software of these events.
 
-
-***** rewrite *****
-When a message is emitted for processing the backend should mark it for processing and effectively lock the message from being processed while it is being processed.
-
-DDQ is split into this core library and a backend. The core exposes the public interface, initializes the backend, then encapsulates some of the logic (such as message heartbeats) so the backends have less duplicated code. The backend is responsible for implementation-level details, such as how to store and retrieve messages and the queue cleanup jobs. The backend is specific to a data source, such as MySQL.
-
-**** remove
-DDQ is split into this core library and a backend. DDQ's job is to take messages and commands from the user and relays to the backend to do something. DDQ also handles certain business logic like being paused when too many messages are in flight or if the user wants to stop polling for a time. The backend has the job of doing what DDQ tells it to do, but could also be responsible for polling for messages emitting when it's found one and cleaning up tasks.
-****
-
-
-Usage
------
-
-
+DDQ is split into this core library and a backend. The core exposes the public interface, initializes the backend, then encapsulates some of the logic (such as message heartbeats) so the backends have less duplicated code. The backend is responsible for implementation-level details, such as how to store and retrieve messages and the queue cleanup jobs. The backend is specific to a data source, such as MySQL. Also, when a message is emitted to be processed, the backend should lock the message so no other instance may pick it up to be processed simultaneously.
 
 
 Setting Up
 ----------
 
-Setting up DDQ is pretty straight forward. It does require some configuration to get everything working together. Your project would need to include DDQ in it's `package.json` and also include a `backend` module or write one yourself. In the `config` value for `backend` this will set what module you're using. In the code this looks for `ddq-backend-whatYouHaveInConfigValueForBackend`. This should be in your `node_modules/` directory, so it's easily used.
+Setting up DDQ is pretty straight forward. It does require some configuration to get everything working together. Your project would need to include DDQ in it's `package.json` and also include a `backend` module or write one yourself. In the `config` value for `backend` this will set what module you're using. In the code this looks for `ddq-backend-whatYouHaveInConfigValueForBackend`. This should also be in your `node_modules/` directory, so it's easily found.
 
 Another config value is the `heartbeatDelay`. DDQ uses a method on the wrapped message, which we'll get to later. A heartbeat routine is called every so often to update the task/job in the queue currently being processed. The `heartbeatDelay` is configured in milliseconds, so a value of "1000" would have the heartbeat execute every second.
 
@@ -66,7 +53,7 @@ Other config values would be more specific for what your backend needs, like tab
 Sending a Message
 -----------------
 
-A producer would be one to send a message. Using the `sendMessage` method you would send in the `message` you want to use and a `callback`. The callback is a way to handle when the `message` is successfully added to the queue, or not.
+To send a message into the queue, use `instance.sendMessage()`. You pass in the message and an optional callback which be executed once the message has been sent. The message can be anything you want as the backend will be the one to process it and put it into its storage mechanism.
 
     instance.sendMessage("sample message", (err) => {
         if (err) {
