@@ -46,15 +46,20 @@ ddq.on("error", (err) => {
  */
 function messageResponse(err) {
     if (err) {
-        console.log(`There was an error sendin message: message_${i}`);
+        console.log(`There was an error sending message: message_${i}`);
         console.log(err);
     }
 }
-timers.setInterval(() => {
+
+
+/**
+ * Floods the backend with data we wa have lots to use in testing.
+ */
+function floodWithData() {
     var count, maxNumberOfMessages;
 
     count = 0;
-    maxNumberOfMessages = 5;
+    maxNumberOfMessages = 15;
     console.log("Flooding instance with data...");
     for (count; count < maxNumberOfMessages; count += 1) {
         i += 1;
@@ -65,4 +70,10 @@ timers.setInterval(() => {
     if (i >= 25) {
         i = 0;
     }
+}
+
+timers.setInterval(() => {
+    floodWithData();
 }, 25000);
+
+floodWithData();

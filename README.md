@@ -65,7 +65,7 @@ To send a message into the queue, use `instance.sendMessage()`. You pass in the 
 Listening
 ---------
 
-In order to receive messages from the queue, call `instance.listen()` and the instance will start to emit messages as they are found. DDQ will send two types of events: `data` and `error`. When `data` is emitted. you'll receive a message from the queue and a `callback` from DDQ. Once the process is complete you'll need to call the `callback` with an argument whether there was an error when processing.
+In order to receive messages from the queue, call `instance.listen()` and the instance will start to emit messages as they are found. DDQ will send two types of events: `data` and `error`. When `data` is emitted, you'll receive a message from the queue and a `callback` from DDQ. Once the process is complete you'll need to call the `callback` with an argument whether there was an error when processing.
 
 When the `data` event is triggered from the backend DDQ will use methods on the data received from the `backend`. These methods include: `heartbeat`, `heartbeatKill`, `requeue`, and `remove`. The only piece of information the software running DDQ will receive is the message and the callback from DDQ in order to say whether the processing of the message was successful or not. When the message is being processed DDQ with call the `heartbeat` method on the `wrappedMessage` using `heartbeatDelay` from the config to tell the `backend` to update the heartbeat at that interval.
 
@@ -112,7 +112,7 @@ Once you feel you should resume polling you can call the `instance.resumePolling
 Closing
 -------
 
-At some time you'll want to stop listening to DDQ which you will call `close`. This will call the backend to close it's connections and, stop polling for messages and stop emitting messages..
+At some time you'll want to stop listening to DDQ which you will call `close`. This will call the backend to close its connections, stop polling for messages and stop emitting messages..
 
     // Stop listening to events and close the connection to the database.
     instance.close((err) => {
