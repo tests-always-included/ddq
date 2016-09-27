@@ -89,7 +89,7 @@ describe("tests", () => {
                 ddq.pausePolling();
                 ddq.backend.emit("data", wrappedMessage);
             });
-            it("pauses when reaching its limit", () => {
+            it("pauses when reaching its limit", (done) => {
                 var emitted;
 
                 emitted = false;
@@ -98,13 +98,14 @@ describe("tests", () => {
                     emitted = true;
                     expect(message).toBe("mock message");
                     expect(callback).toEqual(jasmine.any(Function));
+                    expect(ddq.backend.pausePolling).toHaveBeenCalled();
+                    expect(emitted).toBe(true);
+                    expect(wrappedMessage.requeue).not.toHaveBeenCalled();
+                    expect(wrappedMessage.remove).not.toHaveBeenCalled();
+                    done();
                 });
                 ddq.messagesBeingProcessed = 5;
                 ddq.backend.emit("data", wrappedMessage);
-                expect(ddq.backend.pausePolling).toHaveBeenCalled();
-                expect(emitted).toBe(true);
-                expect(wrappedMessage.requeue).not.toHaveBeenCalled();
-                expect(wrappedMessage.remove).not.toHaveBeenCalled();
             });
             it("removes on success", (done) => {
                 ddq.on("data", (message, callback) => {
