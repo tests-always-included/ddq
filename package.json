@@ -7,7 +7,7 @@
     "description": "DeDuplicated Queue",
     "devDependencies": {
         "codecov": "^1.0.1",
-        "ddq-backend-mock": "git://github.com/AbsentSemicolon/ddq-backend-mock.git#develop",
+        "ddq-backend-mock": "^1.0.0",
         "eslint": "^3.5.0",
         "istanbul": "^0.4.5",
         "jasmine-node": "^1.14.5",
