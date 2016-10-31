@@ -1,20 +1,23 @@
 "use strict";
 
 describe("tests", () => {
-    var config, Ddq, events, timersMock;
+    var config, configValidatorMock, Ddq, events, timersMock;
 
+    configValidatorMock = jasmine.createSpyObj("configValidatorMock", [
+        "validateConfig"
+    ]);
     events = require("events");
     timersMock = require("../mock/timers-mock");
     beforeEach(() => {
         config = {
             backend: "mock",
             backendConfig: {
-                pollingDelay: 5000
+                pollingDelayMs: 5000
             },
-            heartbeatDelay: 1000,
-            maxProcessingMessages: 2
+            heartbeatDelayMs: 1000,
+            createMessageCycleLimit: 2
         };
-        Ddq = require("../../lib/ddq")(events, timersMock);
+        Ddq = require("../../lib/ddq")(configValidatorMock, events, timersMock);
     });
     describe(".constructor()", () => {
         it("can make a new DDQ", () => {
@@ -59,6 +62,23 @@ describe("tests", () => {
             ddq = new Ddq(config);
             ddq.listen();
             ddq.close();
+        });
+    });
+    describe(".ensureConnection()", () => {
+        it("calls the error callback", () => {
+            var ddq;
+
+            ddq = new Ddq(config);
+            spyOn(console, "error");
+            spyOn(ddq.backend, "connect").andCallFake((callback) => {
+                callback({
+                    message: "SomeError"
+                });
+            });
+            ddq.ensureConnection((err) => {
+                console.error(err.message);
+            }, () => {});
+            expect(console.error).toHaveBeenCalledWith("SomeError");
         });
     });
     describe(".listen()", () => {

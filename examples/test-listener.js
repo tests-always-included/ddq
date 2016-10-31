@@ -8,10 +8,10 @@ timers = require("timers");
 config = {
     backend: "mock",
     backendConfig: {
-        pollingDelay: 5000
+        pollingDelayMs: 5000
     },
-    heartbeatDelay: 1000,
-    maxProcessingMessages: 10
+    heartbeatDelayMs: 1000,
+    createMessageCycleLimit: 10
 };
 i = 0;
 console.log(`Initializing using config: ${JSON.stringify(config)}`);

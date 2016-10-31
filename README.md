@@ -22,9 +22,9 @@ Setting Up
 
 Setting up DDQ is pretty straight forward. It does require some configuration to get everything working together. Your project would need to include DDQ in it's `package.json` and also include a `backend` module or write one yourself. In the `config` value for `backend` this will set what module you're using. In the code this looks for `ddq-backend-whatYouHaveInConfigValueForBackend`. This should also be in your `node_modules/` directory, so it's easily found.
 
-Another config value is the `heartbeatDelay`. DDQ uses a method on the wrapped message, which we'll get to later. A heartbeat routine is called every so often to update the task/job in the queue currently being processed. The `heartbeatDelay` is configured in milliseconds, so a value of "1000" would have the heartbeat execute every second.
+Another config value is the `heartbeatDelayMs`. DDQ uses a method on the wrapped message, which we'll get to later. A heartbeat routine is called every so often to update the task/job in the queue currently being processed. The `heartbeatDelayMs` is configured in milliseconds, so a value of "1000" would have the heartbeat execute every second.
 
-Also, servers might not be able to handle a certain number of processes, or you might only want to handle a few at a time, so setting the `maxProcessingMessages` to a number will make it so only up to that number of processes are created. DDQ will automatically tell the backend to pause the polling when this limit is reached. It will resume polling once the number of processing messages is lower than the max.
+Also, servers might not be able to handle a certain number of processes, or you might only want to handle a few at a time, so setting the `createMessageCycleLimit` to a number will make it so only up to that number of processes are created. DDQ will automatically tell the backend to pause the polling when this limit is reached. It will resume polling once the number of processing messages is lower than the max.
 
 Other config values would be more specific for what your backend needs, like table name, how often to poll the storage mechanism and so on. These are passed to the backend using the `backendConfig` values.
 
@@ -40,13 +40,13 @@ Other config values would be more specific for what your backend needs, like tab
         backendConfig: {
             host: "localhost",
             password: "someReallyNiceLongSecurePassword",
-            pollingDelay: 5000,
+            pollingDelayMs: 5000,
             port: 3306,
             table: "query",
             user: "hopefullyNotRoot"
         },
-        heartbeatDelay: 1000,
-        maxProcessingMessages: 10
+        heartbeatDelayMs: 1000,
+        createMessageCycleLimit: 10
     });
 
 
@@ -67,7 +67,7 @@ Listening
 
 In order to receive messages from the queue, call `instance.listen()` and the instance will start to emit messages as they are found. DDQ will send two types of events: `data` and `error`. When `data` is emitted, you'll receive a message from the queue and a `callback` from DDQ. Once the process is complete you'll need to call the `callback` with an argument whether there was an error when processing.
 
-When the `data` event is triggered from the backend DDQ will use methods on the data received from the `backend`. These methods include: `heartbeat`, `heartbeatKill`, `requeue`, and `remove`. The only piece of information the software running DDQ will receive is the message and the callback from DDQ in order to say whether the processing of the message was successful or not. When the message is being processed DDQ with call the `heartbeat` method on the `wrappedMessage` using `heartbeatDelay` from the config to tell the `backend` to update the heartbeat at that interval.
+When the `data` event is triggered from the backend DDQ will use methods on the data received from the `backend`. These methods include: `heartbeat`, `requeue`, and `remove`. The only piece of information the software running DDQ will receive is the message and the callback from DDQ in order to say whether the processing of the message was successful or not. When the message is being processed DDQ with call the `heartbeat` method on the `wrappedMessage` using `heartbeatDelayMs` from the config to tell the `backend` to update the heartbeat at that interval.
 
     // Starts listening for events.
     instance.listen();
