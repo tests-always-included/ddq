@@ -15,7 +15,7 @@ describe("tests", () => {
                 pollingDelayMs: 5000
             },
             heartbeatDelayMs: 1000,
-            createMessageCycleLimit: 2
+            maxProcessingMessages: 2
         };
         Ddq = require("../../lib/ddq")(configValidatorMock, events, timersMock);
     });
@@ -91,6 +91,12 @@ describe("tests", () => {
             }, () => {});
             expect(console.error).not.toHaveBeenCalledWith("SomeError");
         });
+        it("uses the default errorCallback if the successCallback isn't defined", () => {
+            var ddq;
+
+            ddq = new Ddq(config);
+            ddq.connect();
+        });
     });
     describe(".open()", () => {
         it("starts listening on the backend", () => {
@@ -120,7 +126,7 @@ describe("tests", () => {
                 ddq.pauseListening();
                 ddq.backend.emit("data", wrappedMessage);
             });
-            it("pauses when reaching its limit", (done) => {
+            it("stops when reaching its limit", (done) => {
                 var emitted;
 
                 emitted = false;
@@ -133,10 +139,10 @@ describe("tests", () => {
                     expect(emitted).toBe(true);
                     expect(wrappedMessage.requeue).not.toHaveBeenCalled();
                     expect(wrappedMessage.remove).not.toHaveBeenCalled();
-                    ddq.close();
                     done();
                 });
                 ddq.messagesBeingProcessed = 5;
+                ddq.maxProcessingMessages = 4;
                 ddq.backend.emit("data", wrappedMessage);
             });
             it("removes on success", (done) => {
