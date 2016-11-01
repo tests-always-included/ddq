@@ -67,7 +67,7 @@ Listening
 
 In order to receive messages from the queue, call `instance.listen()` and the instance will start to emit messages as they are found. DDQ will send two types of events: `data` and `error`. When `data` is emitted, you'll receive a message from the queue and a `callback` from DDQ. Once the process is complete you'll need to call the `callback` with an argument whether there was an error when processing.
 
-When the `data` event is triggered from the backend DDQ will use methods on the data received from the `backend`. These methods include: `heartbeat`, `requeue`, and `remove`. The only piece of information the software running DDQ will receive is the message and the callback from DDQ in order to say whether the processing of the message was successful or not. When the message is being processed, DDQ will call the `heartbeat` method on the `wrappedMessage` using `heartbeatDelayMs` from the config to tell the `backend` to update the heartbeat at that interval.
+When the `data` event is triggered from the backend, DDQ will use methods on the data received from the `backend`. These methods include: `heartbeat`, `requeue`, and `remove`. The only piece of information the software running DDQ will receive is the message and the callback from DDQ in order to say whether the processing of the message was successful or not. When the message is being processed, DDQ will call the `heartbeat` method on the `wrappedMessage` using `heartbeatDelayMs` from the config to tell the `backend` to update the heartbeat at that interval.
 
     // Starts listening for events.
     instance.listen();
