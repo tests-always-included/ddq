@@ -11,7 +11,7 @@ config = {
         pollingDelayMs: 5000
     },
     heartbeatDelayMs: 1000,
-    createMessageCycleLimit: 10
+    maxProcessingMessages: 10
 };
 i = 0;
 console.log(`Initializing using config: ${JSON.stringify(config)}`);

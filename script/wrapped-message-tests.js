@@ -1,7 +1,8 @@
 "use strict";
 
-var config, Plugin, runNext, testCounter, tests;
+var assert, config, Plugin, runNext, testCounter, tests;
 
+assert = require("assert");
 config = require("./manual-testing-config");
 Plugin = require("..");
 testCounter = 0;
@@ -40,8 +41,9 @@ function doneCb(err) {
  *
  * @param {Object} instance
  * @param {Function} done
+ * @param {Function} [fn] The function that is to be tested.
  */
-function cleanup(instance, done) {
+function cleanup(instance, done, fn) {
     instance.connection.query("DELETE FROM ??;",
         [
             instance.config.table
@@ -57,6 +59,10 @@ function cleanup(instance, done) {
 
             // This should be 0 in the case of remove
             console.log("Affected Rows", data.affectedRows);
+
+            if (fn && (fn === "heartbeat" || fn === "requeue")) {
+                assert(data.affectedRows);
+            }
 
             instance.disconnect((err) => {
                 if (err) {
@@ -103,7 +109,7 @@ function prepTest(instance, query, done) {
  * Instantiates and preps the plugin for testing. The "data" event listener will
  * call the wrapped message function and initiate cleanup on success.
  *
- * @param {Function} fn
+ * @param {Function} fn The function that is to be tested.
  * @param {string} query
  * @param {Function} done
  */
@@ -111,11 +117,9 @@ function wrappedMessageTest(fn, query, done) {
     var instance;
 
     instance = new Plugin(config);
-
     instance.on("data", (data) => {
         console.log("CheckNow data listener activated.");
         instance.stopListening();
-
         data[fn]((err, fnData) => {
             if (err) {
                 done(err);
@@ -126,15 +130,13 @@ function wrappedMessageTest(fn, query, done) {
 
             // This should be undefined for remove.
             console.log(fnData);
-
-            cleanup(instance, done);
+            cleanup(instance, done, fn);
         });
     });
     instance.on("error", (err) => {
         done(err);
         cleanup(instance, done);
     });
-
     instance.connect((err) => {
         if (err) {
             done(err);

@@ -4,7 +4,6 @@ var assert, config, Plugin;
 
 assert = require("assert");
 config = require("./manual-testing-config");
-
 Plugin = require("..");
 
 
@@ -49,21 +48,28 @@ function pollingTest() {
 
         console.log("Connection was successfully made");
         instance.startListening();
-        assertProperties(instanceProperties);
-        instance.stopListening();
-        assertProperties(instanceProperties, true);
-        instance.startListening();
-        assertProperties(instanceProperties);
-        instance.stopListening();
-        assertProperties(instanceProperties, true);
-        instance.disconnect((err) => {
-            if (err) {
-                console.log("There was a problem disconnecting");
-                throw new Error(err);
-            } else {
-                console.log("Disconnected successfully");
-            }
-        });
+        setTimeout(() => {
+            assertProperties(instanceProperties);
+            instance.stopListening(() => {
+                assertProperties(instanceProperties, true);
+                instance.startListening();
+                setTimeout(() => {
+                    assertProperties(instanceProperties);
+                    instance.stopListening(() => {
+                        assertProperties(instanceProperties, true);
+                        instance.disconnect((err) => {
+                            if (err) {
+                                console.log("There was a problem disconnecting");
+                                throw new Error(err);
+                            } else {
+                                console.log("Disconnected successfully");
+                            }
+                        });
+                    });
+                }, 2000);
+            });
+        }, 2000);
     });
 }
+
 pollingTest();

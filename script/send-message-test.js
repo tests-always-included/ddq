@@ -10,7 +10,7 @@ Plugin = require("..");
  * Easily plugable callback, which will throw any errors it receives.
  *
  * @param {Object} err
- * @throw {Error}
+ * @throw {Error} Throws any error passed in.
  */
 function doneCb(err) {
     if (err) {
@@ -27,8 +27,8 @@ function doneCb(err) {
  * connection. Call the done callback on any returned values and disconnect on
  * success.
  *
- * @param {Function} fn
- * @param {Function} done
+ * @param {Function} fn The function that is being tested.
+ * @param {Function} done An error handling function. Will log on success.
  */
 function manualTest(fn, done) {
     var fnCallTime, instance;
