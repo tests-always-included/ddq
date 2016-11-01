@@ -3,4 +3,5 @@ instrumentation:
         - examples/**/*.js
         - spec/**/*.js
         - lib/index.js
+        - script/*
     include-all-sources: true

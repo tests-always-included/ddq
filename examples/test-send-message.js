@@ -7,7 +7,7 @@ Ddq = require("..");
 config = {
     backend: "mock",
     backendConfig: {
-        pollingRate: 1000
+        pollingDelayMs: 1000
     }
 };
 ddq = new Ddq(config);
