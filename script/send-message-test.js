@@ -15,6 +15,7 @@ Plugin = require("..");
 function doneCb(err) {
     if (err) {
         console.log("sendMessage test failed");
+
         throw new Error(err);
     } else {
         console.log("sendMessage test passed");

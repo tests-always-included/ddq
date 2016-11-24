@@ -43,17 +43,16 @@ function pollingTest() {
     instance.connect((connectErr) => {
         if (connectErr) {
             console.log("There was a connection error");
+
             throw new Error(connectErr);
         }
 
         console.log("Connection was successfully made");
-        instance.startListening();
-        setTimeout(() => {
+        instance.startListening(() => {
             assertProperties(instanceProperties);
             instance.stopListening(() => {
                 assertProperties(instanceProperties, true);
-                instance.startListening();
-                setTimeout(() => {
+                instance.startListening(() => {
                     assertProperties(instanceProperties);
                     instance.stopListening(() => {
                         assertProperties(instanceProperties, true);
@@ -66,9 +65,9 @@ function pollingTest() {
                             }
                         });
                     });
-                }, 2000);
+                });
             });
-        }, 2000);
+        });
     });
 }
 
