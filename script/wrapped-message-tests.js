@@ -1,9 +1,10 @@
 "use strict";
 
-var assert, config, Plugin, runNext, testCounter, tests;
+var assert, config, errCount, Plugin, runNext, testCounter, tests;
 
 assert = require("assert");
 config = require("./manual-testing-config");
+errCount = 0;
 Plugin = require("..");
 testCounter = 0;
 tests = [
@@ -24,7 +25,7 @@ tests = [
 
 /**
  * A done callback that can be easily plugged into the various branches of the
- * other testing functions. Starts next test after logging any errors.
+ * other testing functions.
  *
  * @param {Object} err
  */
@@ -32,6 +33,7 @@ function doneCb(err) {
     if (err) {
         console.error("There was an error during test: ", tests[testCounter].name);
         console.error(err);
+        errCount += 1;
     }
 }
 
@@ -57,9 +59,8 @@ function cleanup(instance, done, fn) {
             instance.removeAllListeners();
             console.log("Cleanup was successful");
 
-            // This should be 0 in the case of remove
-            console.log("Affected Rows", data.affectedRows);
-
+            // This should be 0 in the case of remove, which is why the assert
+            // isn't run for remove.
             if (fn && (fn === "heartbeat" || fn === "requeue")) {
                 assert(data.affectedRows);
             }
@@ -153,6 +154,8 @@ runNext = function (done) {
 
     if (tests[testCounter]) {
         wrappedMessageTest(tests[testCounter].name, tests[testCounter].query, done);
+    } else {
+        assert(errCount, 0, `Error Count: ${errCount}`);
     }
 
     return;
