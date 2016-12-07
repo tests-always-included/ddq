@@ -8,3 +8,11 @@ node_js:
     - "6"
 before_install:
     - "npm install -g npm@latest"
+services:
+    - mysql
+before_script:
+    - bash ./script/mysql-commands.sh
+script:
+    - node script/wrapped-message-tests mysql
+    - node script/send-message-test mysql
+    - node script/polling-heartbeat-test mysql

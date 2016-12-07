@@ -28,3 +28,4 @@ npm-debug.log
 encryption.key
 
 /script/manual-testing-config.js
+/script/mysql-commands.sh

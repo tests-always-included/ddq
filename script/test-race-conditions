@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./script/mysql-commands.sh
+./script/race-conditions.js
