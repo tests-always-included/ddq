@@ -26,3 +26,5 @@ nbproject/
 /node_modules/
 npm-debug.log
 encryption.key
+
+/script/manual-testing-config.js
