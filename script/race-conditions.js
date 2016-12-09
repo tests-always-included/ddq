@@ -2,18 +2,10 @@
 
 "use strict";
 
-var config, DDQ, paramKey, testScenarios;
+var config, DDQ, instance, testScenarios;
 
 config = require("./manual-testing-config");
 DDQ = require("..");
-paramKey = {
-    close: [
-        (instance, test) => {
-            console.log(`Running next: ${test}`);
-            runCommands(instance, test);
-        }
-    ]
-};
 testScenarios = [
     // [
     //     "open",
@@ -59,75 +51,95 @@ testScenarios = [
 ];
 
 /* eslint-disable require-jsdoc */
-// function scenarioTest(test) {
-//     var instance;
-//
-//     instance = new DDQ(config);
-//     instance.on("error", (err) => {
-//         console.log(err.message);
-//     });
-//     instance.on("data", (data) => {
-//         console.log(data);
-//     });
-//     test.forEach((command) => {
-//         instance[command](() => {
-//             console.log(command);
-//         });
-//     });
-//
-// }
-//
-function runCommands(instance, test) {
-    var mostRecentCommand;
+function runTests(tests, done) {
+    var nextTest;
 
-    if (test.length) {
-        // Remove the first command from test and set it to mostRecentCommand
-        mostRecentCommand = test.shift();
-    } else {
-        console.log("Finished running commands.");
+    if (!tests || !tests.length) {
+        done();
 
         return;
     }
 
-    instance[mostRecentCommand].apply(null, paramKey[mostRecentCommand]);
-}
-
-function runner(tests) {
-    tests.forEach((test) => {
-        var instance;
-
-        instance = new DDQ(config);
-        instance.on("error", () => {
-            if (instance.backend.connection) {
-                instance.backend.connection.destroy();
-            } else {
-                console.log("ERROR LISTENER ACTIVATED");
-            }
-        });
-        instance.on("data", (data) => {
-            console.log(data);
-        });
-
-        runCommands(instance, test);
+    nextTest = tests.shift();
+    instance[nextTest]((err) => {
+        if (err) {
+            done(err);
+        } else {
+            runTests(tests, done);
+        }
     });
 }
 
+function methodFails() {
+    var args, method;
+
+    args = [].prototype.slice.call(arguments);
+    method = args.shift();
+
+    return (testComplete) => {
+        args.concat((err) => {
+            if (err) {
+                testComplete();
+            } else {
+                testComplete(new Error("humbug"));
+            }
+        });
+        instance[method].apply(instance, args);
+    };
+}
+
+function methodSucceeds() {
+    var args, method;
+
+    args = [].prototype.slice.call(arguments);
+    method = args.shift();
+
+    return (testComplete) => {
+        args.concat(testComplete);
+        instance[method].apply(instance, args);
+    };
+}
+
+function done() {}
+//
+// function runner(tests) {
+//     tests.forEach((functionSeries) => {
+//         instance = new DDQ(config);
+//         instance.on("error", () => {
+//             if (instance.backend.connection) {
+//                 instance.backend.connection.destroy();
+//             } else {
+//                 console.log("ERROR LISTENER ACTIVATED");
+//             }
+//         });
+//         instance.on("data", (data) => {
+//             console.log(data);
+//         });
+//
+//         runTests(functionSeries, done);
+//     });
+// }
+
+beforeEach(() => {
+    instance = new DDQ(config);
+    instance.on("error", () => {
+        if (instance.backend.connection) {
+            instance.backend.connection.destroy();
+        } else {
+            console.log("ERROR LISTENER ACTIVATED");
+        }
+    });
+    instance.on("data", (data) => {
+        console.log(data);
+    });
+});
+it("", (testIsDone) => {
+    var test;
+
+    tests = methodSucceeds("open");
+
+    runTest(test, testIsDone);
+});
+
 runner(testScenarios);
 
-
-// var instance;
-//
-// instance = new DDQ(config);
-//
-// instance.on("error", (err) => {
-//     console.log(err.message);
-// });
-//
-// instance.on("data", (data) => {
-//     console.log(data);
-// });
-//
-// instance.open(() => {
-//     instance.close();
-// });
-// instance.close();
