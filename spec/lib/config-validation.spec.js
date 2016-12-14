@@ -17,7 +17,6 @@ describe("lib/config-validation", () => {
         it("throws an error if any of the configKeys are missing", () => {
             config = {
                 backend: "SomeBackend",
-                createMessageCycleLimit: 10,
                 heartbeatDelayMs: 1000
             };
             expect(() => {
@@ -26,10 +25,7 @@ describe("lib/config-validation", () => {
         });
         it("throws if required config values are of the wrong type", () => {
             config = {
-                backend: "SomeBackend",
-                createMessageCycleLimit: {
-                    limit: 10
-                },
+                backend: 10,
                 heartbeatDelayMs: 1000,
                 backendConfig: {
                     host: "SomeHost",
@@ -43,7 +39,6 @@ describe("lib/config-validation", () => {
         it("doesn't throw when given a valid config", () => {
             config = {
                 backend: "SomeBackend",
-                createMessageCycleLimit: 10,
                 heartbeatDelayMs: 5000,
                 backendConfig: {
                     host: "SomeHost",

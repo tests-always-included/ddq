@@ -63,39 +63,24 @@ describe("tests", () => {
             ddq.open();
             ddq.close();
         });
-    });
-    describe(".connect()", () => {
-        it("calls the error callback", () => {
+        it("attempts to close with no connection open", () => {
             var ddq;
 
             ddq = new Ddq(config);
-            spyOn(console, "error");
-            spyOn(ddq.backend, "connect").andCallFake((callback) => {
-                callback({
-                    message: "SomeError"
-                });
+            ddq.close(() => {
+                expect(ddq.closeCallback).not.toEqual(jasmine.any(Function));
             });
-            ddq.connect((err) => {
-                console.error(err.message);
-            }, () => {});
-            expect(console.error).toHaveBeenCalledWith("SomeError");
         });
-        it("calls the success callback if there is already a connection", () => {
+        it("closes while listening", () => {
             var ddq;
 
             ddq = new Ddq(config);
-            spyOn(console, "error");
-            ddq.backend.connection = true;
-            ddq.connect((err) => {
-                console.error(err.message);
-            }, () => {});
-            expect(console.error).not.toHaveBeenCalledWith("SomeError");
-        });
-        it("uses the default errorCallback if the successCallback isn't defined", () => {
-            var ddq;
-
-            ddq = new Ddq(config);
-            ddq.connect();
+            ddq.isListening = true;
+            ddq.open();
+            spyOn(ddq.backend, "stopListening").andCallThrough();
+            ddq.close(() => {
+                expect(ddq.backend.stopListening).toHaveBeenCalled();
+            });
         });
     });
     describe(".open()", () => {
@@ -103,12 +88,22 @@ describe("tests", () => {
             var ddq;
 
             ddq = new Ddq(config);
-            ddq.backend.startListening = jasmine.createSpy("ddq.backend.startListening");
+            ddq.backend.connect = jasmine.createSpy("ddq.backend.connect");
             ddq.open();
-            expect(ddq.backend.startListening).toHaveBeenCalled();
+            expect(ddq.backend.connect).toHaveBeenCalled();
+        });
+        it("Fails to open a connection.", () => {
+            var ddq;
+
+            ddq = new Ddq(config);
+            ddq.busy = true;
+            ddq.open((err) => {
+                expect(err).toEqual(jasmine.any(Error));
+            });
         });
     });
-    describe("EventEmitter", () => {
+
+    /* describe("EventEmitter", () => {
         var ddq, wrappedMessage;
 
         beforeEach(() => {
@@ -283,51 +278,71 @@ describe("tests", () => {
             wrappedMessage.heartbeatError = true;
             ddq.backend.emit("data", wrappedMessage);
         });
-    });
-    describe(".pausePolling()", () => {
+    }); */
+
+    describe(".listenStart()", () => {
         var ddq;
 
         beforeEach(() => {
             ddq = new Ddq(config);
-            ddq.backend.startListening = jasmine.createSpy("ddq.backend.startListening");
-            ddq.backend.stopListening = jasmine.createSpy("ddq.backend.stopListening");
+            timersMock.setTimeout = jasmine.createSpy("timeout");
+            spyOn(ddq.backend, "startListening");
+            ddq.backend.storedData = [
+                {
+                    id: 0,
+                    isProcessing: false,
+                    requeded: false,
+                    owner: null
+                },
+                {
+                    id: 1,
+                    isProcessing: false,
+                    requeded: false,
+                    owner: null
+                }
+            ];
         });
-        it("sets the flag indicating the user paused polling", () => {
+        it("ddq is busy and fails to start connection", () => {
             ddq.open();
-            ddq.pauseListening();
-            expect(ddq.isPausedByUser).toBe(true);
-            expect(ddq.backend.stopListening).toHaveBeenCalled();
+            ddq.busy = true;
+            ddq.listenStart((err) => {
+                expect(err).toEqual(jasmine.any(Error));
+            });
         });
-        it("does not pause when not listening", () => {
-            ddq.pauseListening();
-            expect(ddq.isPausedByUser).toBe(false);
-            expect(ddq.backend.stopListening).not.toHaveBeenCalled();
+        it("starts connection", (done) => {
+            ddq.open();
+            ddq.on("data", (msg, callback) => {
+                callback();
+                expect(ddq.backend.startListening).toHaveBeenCalled();
+                done();
+            });
+            ddq.listenStart();
+            ddq.backend.checkAndEmitData();
         });
-    });
-    describe(".resumeListening()", () => {
-        var ddq;
+        it("message is requeued due to error", (done) => {
+            var err;
 
-        beforeEach(() => {
-            ddq = new Ddq(config);
-            ddq.backend.startListening = jasmine.createSpy("ddq.backend.startListening");
-            ddq.backend.stopListening = jasmine.createSpy("ddq.backend.stopListening");
-            ddq.open(() => {});
+            ddq.open();
+            ddq.on("data", (msg, callback) => {
+                err = new Error("Cray cray");
+                callback(err);
+                done();
+            });
+            ddq.listenStart();
+            ddq.backend.checkAndEmitData();
         });
-        it("has conditions to resume polling", () => {
-            ddq.pauseListening();
-            ddq.resumeListening();
-            expect(ddq.backend.startListening.callCount).toBe(2);
-        });
-        it("is paused by user and will not resume", () => {
-            ddq.isPausedByUser = false;
-            ddq.resumeListening();
-            expect(ddq.backend.startListening.callCount).toBe(1);
-        });
-        it("is paused by user and limits and will not resume", () => {
-            ddq.isPausedByUser = true;
-            ddq.isPausedByLimits = true;
-            ddq.resumeListening();
-            expect(ddq.backend.startListening.callCount).toBe(1);
+        it("duplicate calls to done", (done) => {
+            ddq.open();
+            ddq.on("data", (msg, callback) => {
+                callback();
+                callback();
+            });
+            ddq.on("error", (err) => {
+                expect(err).toEqual(jasmine.any(Error));
+                done();
+            });
+            ddq.listenStart();
+            ddq.backend.checkAndEmitData();
         });
     });
     describe(".sendMessage()", () => {
@@ -335,27 +350,22 @@ describe("tests", () => {
             var ddq;
 
             ddq = new Ddq(config);
-            ddq.sendMessage("message", (err) => {
+            ddq.open();
+            ddq.sendMessage((err) => {
                 expect(err).not.toBeDefined();
                 done();
-            });
+            }, "message", "topic");
         });
         it("reports errors", (done) => {
             var ddq;
 
             config.backendConfig.sendFail = true;
             ddq = new Ddq(config);
-            ddq.sendMessage("message", (err) => {
+            ddq.open();
+            ddq.sendMessage((err) => {
                 expect(err).toEqual(jasmine.any(Error));
                 done();
-            });
-        });
-        it("reports errors", () => {
-            var ddq;
-
-            config.backendConfig.sendFail = true;
-            ddq = new Ddq(config);
-            ddq.sendMessage("message");
+            }, "message", "topic");
         });
     });
 });

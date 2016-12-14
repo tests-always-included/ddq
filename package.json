@@ -6,7 +6,7 @@
     "description": "DeDuplicated Queue",
     "devDependencies": {
         "codecov": "^1.0.1",
-        "ddq-backend-mock": "^2.0.0",
+        "ddq-backend-mock": "git://github.com/tests-always-included/ddq-backend-mock.git#release2.0",
         "ddq-backend-mysql": "git://github.com/tests-always-included/ddq-backend-mysql.git#release2.0",
         "eslint": "^3.5.0",
         "istanbul": "^0.4.5",
@@ -30,7 +30,7 @@
         "url": "git+https://github.com/tests-always-included/ddq.git"
     },
     "scripts": {
-        "test": "istanbul cover jasmine-node node_modules/jasmine-test-helpers/lib/ --captureExceptions spec/func* && codecov && eslint .",
+        "test": "istanbul cover jasmine-node node_modules/jasmine-test-helpers/lib/ --captureExceptions spec/lib && eslint .",
         "watch": "jasmine-node node_modules/jasmine-test-helpers/lib/ lib spec --autotest --watch"
     },
     "version": "1.1.0"

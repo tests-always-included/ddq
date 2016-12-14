@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 "use strict";
+/* eslint-disable */
 
 var config, DDQ, instance, testScenarios;
 
