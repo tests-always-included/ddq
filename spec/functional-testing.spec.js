@@ -6,6 +6,35 @@ config = require("../script/manual-testing-config");
 DDQ = require("..");
 
 /* eslint-disable require-jsdoc */
+function cleanDatabase(callback) {
+    function errorHandler(err) {
+        if (err) {
+            console.log("There was an error during cleanup:", err);
+        }
+    }
+
+    instance.open((err) => {
+        errorHandler(err);
+
+        instance.backend.connection.query(`
+            DELETE FROM ??`,
+            [
+                instance.backend.config.table
+            ], (queryErr, data) => {
+                errorHandler(queryErr);
+
+                console.log("Cleanup Data:");
+                console.log(data);
+
+                instance.backend.connection.end((endErr) => {
+                    errorHandler(endErr);
+                    callback();
+                });
+            }
+        );
+    });
+}
+
 function runTests(methods, doneCb) {
     var nextMethod;
 
@@ -32,12 +61,12 @@ function methodFails() {
     args = [].slice.call(arguments);
     method = args.shift();
 
-    return (testComplete) => {
+    return (cb) => {
         args.unshift((err) => {
             if (err) {
-                testComplete(err);
+                cb(err);
             } else {
-                testComplete(new Error("methodFails was called. No error was passed along."));
+                cb(new Error("methodFails was called. No error was passed along."));
             }
         });
         instance[method].apply(instance, args);
@@ -50,8 +79,8 @@ function methodSucceeds() {
     args = [].slice.call(arguments);
     method = args.shift();
 
-    return (testComplete) => {
-        args.unshift(testComplete);
+    return (cb) => {
+        args.unshift(cb);
         instance[method].apply(instance, args);
     };
 }
@@ -63,7 +92,6 @@ function combine(list) {
 
     return (testComplete) => {
         function singleTestDone(err) {
-            console.log("inside singleTestDone, inside combine");
             if (!remaining) {
                 return;
             }
@@ -87,29 +115,6 @@ function combine(list) {
     };
 }
 
-function cleanDatabase() {
-    function errorHandler(err) {
-        if (err) {
-            console.log("There was an error during cleanup:", err);
-        }
-    }
-
-    instance.open((err) => {
-        errorHandler(err);
-
-        instance.backend.connection.query(`
-            TRUNCATE TABLE ??;`,
-            [
-                instance.backend.config.table
-            ], (queryErr) => {
-                errorHandler(queryErr);
-
-                instance.backend.close(errorHandler);
-            }
-        );
-    });
-}
-
 beforeEach(() => {
     instance = new DDQ(config);
     instance.on("error", (err) => {
@@ -125,127 +130,157 @@ beforeEach(() => {
 describe("DDQ", () => {
     var tests;
 
-    it("opens once", (testComplete) => {
+    it("opens", (testComplete) => {
+        tests = [
+            methodSucceeds("open")
+        ];
+        done = (err) => {
+            expect(err).toBeUndefined();
+            expect(instance.backend.connection).not.toBeUndefined();
+            instance.backend.connection.destroy();
+            testComplete();
+        };
+        runTests(tests, done);
+    });
+    it("opens and closes", (testComplete) => {
+        tests = [
+            methodSucceeds("open"),
+            methodSucceeds("close")
+        ];
+        done = (err) => {
+            expect(err).toBeUndefined();
+            expect(instance.backend.connection).not.toBeUndefined();
+            testComplete();
+        };
+        runTests(tests, done);
+    });
+    it("fails to open if there is already a connection", (testComplete) => {
+        tests = [
+            methodSucceeds("open"),
+            methodFails("open")
+        ];
+        done = (err) => {
+            expect(err.message).toBe("Could not open.");
+            expect(instance.backend.connection).not.toBeUndefined();
+            instance.backend.connection.destroy();
+            testComplete();
+        };
+        runTests(tests, done);
+    });
+    it("fails to close if there isn't a connection", () => {
+        tests = [
+            methodFails("close")
+        ];
+        done = (err) => {
+            expect(err.message).toBe("Could not close.");
+        };
+        runTests(tests, done);
+    });
+    it("fails to send a message if there isn't a connection", () => {
+        tests = [
+            methodFails("sendMessage")
+        ];
+        done = (err) => {
+            expect(err.message).toBe("Could not send message.");
+        };
+        runTests(tests, done);
+    });
+    it("fails to start listening if there isn't a connection", () => {
+        tests = [
+            methodFails("listenStart")
+        ];
+        done = (err) => {
+            expect(err.message).toBe("Could not start listening.");
+        };
+        runTests(tests, done);
+    });
+    it("fails to close the connection after already successfully closing", (testComplete) => {
+        tests = [
+            methodSucceeds("open"),
+            methodSucceeds("close"),
+            methodFails("close")
+        ];
+        done = (err) => {
+            expect(instance.close.calls.length).toBe(2);
+            expect(err.message).toBe("Could not close.");
+            testComplete();
+        };
+        runTests(tests, done);
+    });
+    it("fails to call listenStart if listening is already occuring", (testComplete) => {
+        tests = [
+            methodSucceeds("open"),
+            methodSucceeds("listenStart"),
+            methodFails("listenStart")
+        ];
+        done = (err) => {
+            expect(err.message).toBe("Could not start listening.");
+            instance.close(() => {
+                testComplete();
+            });
+        };
+        runTests(tests, done);
+    });
+    it("handles multiple messages successfully", (testComplete) => {
         tests = [
             methodSucceeds("open"),
             methodSucceeds("sendMessage", "message", "topic"),
             combine([
                 methodSucceeds("sendMessage", "message2", "topic"),
-                methodSucceeds("sendMessage", "message3", "topic")
+                methodSucceeds("sendMessage", "message3")
             ]),
             methodFails("open")
         ];
         done = (err) => {
-            expect(err.message).toBe("Could not send message.");
-            testComplete();
-            instance.backend.connection.destroy();
+            expect(err.message).toBe("Could not open.");
+            instance.close(() => {
+                cleanDatabase(testComplete);
+            });
         };
-
         runTests(tests, done);
     });
-    // it("opens", (testComplete) => {
-    //     tests = [
-    //         methodSucceeds("open")
-    //     ];
-    //     done = (err) => {
-    //         expect(err).toBeUndefined();
-    //         expect(instance.backend.connection).not.toBeUndefined();
-    //         instance.backend.connection.destroy();
-    //         testComplete();
-    //     };
-    //     runTests(tests, done);
-    // });
-    // it("opens and closes", (testComplete) => {
-    //     tests = [
-    //         methodSucceeds("open"),
-    //         methodSucceeds("close")
-    //     ];
-    //     done = (err) => {
-    //         expect(err).toBeUndefined();
-    //         expect(instance.backend.connection).not.toBeUndefined();
-    //         testComplete();
-    //     };
-    //     runTests(tests, done);
-    // });
-    // it("fails to open if there is already a connection", (testComplete) => {
-    //     tests = [
-    //         methodSucceeds("open"),
-    //         methodFails("open")
-    //     ];
-    //     done = (err) => {
-    //         expect(err.message).toBe("Could not open. DeDuplicated Queue is either busy or the connection to the database is already open.");
-    //         expect(instance.backend.connection).not.toBeUndefined();
-    //         instance.backend.connection.destroy();
-    //         testComplete();
-    //     };
-    //     runTests(tests, done);
-    // });
-    // it("fails to close if there isn't a connection", () => {
-    //     tests = [
-    //         methodFails("close")
-    //     ];
-    //     done = (err) => {
-    //         expect(instance.emit).toHaveBeenCalledWith("error", jasmine.any(Error));
-    //         expect(err.message).toBe("Could not close. DeDuplicated Queue is either busy or the connection is already closed.");
-    //     };
-    //     runTests(tests, done);
-    // });
-    // it("fails to send a message if there isn't a connection", () => {
-    //     tests = [
-    //         methodFails("sendMessage")
-    //     ];
-    //     done = (err) => {
-    //         expect(instance.emit).toHaveBeenCalledWith("error", jasmine.any(Error));
-    //         expect(err.message).toBe("Could not send message. DeDuplicated Queue is either busy or the connection to the database is not open.");
-    //     };
-    //     runTests(tests, done);
-    // });
-    // it("fails to start listening if there isn't a connection", () => {
-    //     tests = [
-    //         methodFails("listenStart")
-    //     ];
-    //     done = (err) => {
-    //         expect(instance.emit).toHaveBeenCalledWith("error", jasmine.any(Error));
-    //         expect(err.message).toBe("Could not start listening. DeDuplicated Queue is either busy, does not have an open connection, or is already listening.");
-    //     };
-    //     runTests(tests, done);
-    // });
-    // it("fails to close the connection after already successfully closing", (testComplete) => {
-    //     tests = [
-    //         methodSucceeds("open"),
-    //         methodSucceeds("close")
-    //         // If we try to call close back to back, the nested callback
-    //         // structure will prevent the connection from being destroyed before
-    //         ,
-    //         methodFails("close")
-    //     ];
-    //     done = (err) => {
-    //         expect(instance.close.calls.length).toBe(2);
-    //         expect(instance.emit).toHaveBeenCalledWith("error", jasmine.any(Error));
-    //         expect(err.message).toBe("Could not close. DeDuplicated Queue is either busy or the connection is already closed.");
-    //         testComplete();
-    //     };
-    //     runTests(tests, done);
-    //     // runTests([
-    //     //     methodFails("close")
-    //     // ], () => {
-    //     //
-    //     // });
-    // });
+    it("stops listening before closing", (testComplete) => {
+        tests = [
+            methodSucceeds("open"),
+            methodSucceeds("sendMessage", "message", "topic"),
+            methodSucceeds("listenStart"),
+            methodSucceeds("close")
+        ];
+        done = (err) => {
+            expect(err).toBeUndefined();
+            expect(instance.backend.connection).not.toBeUndefined();
+            cleanDatabase(testComplete);
+        };
+        runTests(tests, done);
+    });
+    it("fails to close if open is in progress", (testComplete) => {
+        tests = [
+            combine([
+                methodSucceeds("open"),
+                methodFails("close")
+            ])
+        ];
+        done = (err) => {
+            expect(err.message).toBe("Could not close.");
+            instance.backend.connection.destroy();
+            testComplete();
+        };
+        runTests(tests, done);
+    });
+    it("closes after all existing messages are handled", (testComplete) => {
+        tests = [
+            methodSucceeds("open"),
+            combine([
+                methodSucceeds("sendMessage", "message2", "topic"),
+                methodSucceeds("sendMessage", "message3"),
+                methodSucceeds("close")
+            ])
+        ];
+        done = (err) => {
+            expect(err).toBeUndefined();
+            expect(instance.close).toHaveBeenCalled();
+            cleanDatabase(testComplete);
+        };
+        runTests(tests, done);
+    });
 });
-afterEach(() => {
-    cleanDatabase();
-});
-
-// [
-//     "open",
-//     "sendMessage",
-//     "listenStart",
-//     "sendMessage",
-//     "close"
-// ]
-// [
-//     "open",
-//     "listenStart",
-//     "listenStart"
-// ]
