@@ -166,6 +166,15 @@ describe("tests", () => {
             ddq.listenStart();
             ddq.backend.checkAndEmitData();
         });
+        it("fails with error relayed from backend", (done) => {
+            ddq.open();
+            ddq.on("error", (err) => {
+                expect(err).toEqual(jasmine.any(Error));
+                done();
+            });
+            ddq.listenStart();
+            ddq.backend.emit("error", new Error("something"));
+        });
     });
     describe(".sendMessage()", () => {
         it("sends successfully", (done) => {
@@ -178,12 +187,20 @@ describe("tests", () => {
                 done();
             }, "message", "topic");
         });
-        it("reports errors", (done) => {
+        it("sends successfully no callback or topic", (done) => {
             var ddq;
 
-            config.backendConfig.sendFail = true;
             ddq = new Ddq(config);
             ddq.open();
+            ddq.sendMessage("message");
+            done();
+        });
+        it("fails sending due to an error", (done) => {
+            var ddq;
+
+            ddq = new Ddq(config);
+            ddq.open();
+            ddq.busy = true;
             ddq.sendMessage((err) => {
                 expect(err).toEqual(jasmine.any(Error));
                 done();
