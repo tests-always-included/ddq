@@ -103,12 +103,13 @@ describe("tests", () => {
         });
     });
     describe(".listenStart()", () => {
-        var ddq;
+        var ddq, wmMock;
 
         beforeEach(() => {
             ddq = new Ddq(config);
             timersMock.setTimeout = jasmine.createSpy("timeout");
-            spyOn(ddq.backend, "startListening");
+            spyOn(ddq.backend, "startListening").andCallThrough();
+            wmMock = require("../mock/wrapped-message-mock")();
             ddq.backend.storedData = [
                 {
                     id: 0,
@@ -118,6 +119,12 @@ describe("tests", () => {
                 },
                 {
                     id: 1,
+                    isProcessing: false,
+                    requeded: false,
+                    owner: null
+                },
+                {
+                    id: 2,
                     isProcessing: false,
                     requeded: false,
                     owner: null
@@ -132,6 +139,16 @@ describe("tests", () => {
             });
         });
         it("starts connection", (done) => {
+            var called;
+
+            called = false;
+
+            timersMock.setTimeout.andCallFake((callback) => {
+                if (!called) {
+                    called = true;
+                    callback();
+                }
+            });
             ddq.open();
             ddq.on("data", (msg, callback) => {
                 callback();
@@ -140,6 +157,28 @@ describe("tests", () => {
             });
             ddq.listenStart();
             ddq.backend.checkAndEmitData();
+        });
+        it("healthcheck fails.", (done) => {
+            var called;
+
+            called = false;
+
+            timersMock.setTimeout.andCallFake((callback) => {
+                if (!called) {
+                    called = true;
+                    callback();
+                }
+            });
+            ddq.open();
+            ddq.on("error", () => {
+                expect(ddq.backend.startListening).toHaveBeenCalled();
+                done();
+            });
+            ddq.listenStart();
+            wmMock.heartbeat.andCallFake((callback) => {
+                callback(new Error("err"));
+            });
+            ddq.backend.emit("data", wmMock);
         });
         it("message is requeued due to error", (done) => {
             var err;
