@@ -9,7 +9,4 @@ node_js:
 before_install:
     - "npm install -g npm@latest"
 script:
-    - node script/wrapped-message-tests mysql
-    - node script/send-message-test mysql
-    - node script/polling-heartbeat-test mysql
     - codecov
