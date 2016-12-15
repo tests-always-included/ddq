@@ -30,7 +30,7 @@
         "url": "git+https://github.com/tests-always-included/ddq.git"
     },
     "scripts": {
-        "test": "istanbul cover jasmine-node node_modules/jasmine-test-helpers/lib/ --captureExceptions spec/func* && codecov && eslint .",
+        "test": "istanbul cover jasmine-node node_modules/jasmine-test-helpers/lib/ --captureExceptions spec/ && codecov && eslint .",
         "watch": "jasmine-node node_modules/jasmine-test-helpers/lib/ lib spec --autotest --watch"
     },
     "version": "1.1.0"
