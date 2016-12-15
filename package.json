@@ -1,5 +1,21 @@
 {
     "author": "Christopher Tetreault",
+    "contributors": [
+        {
+            "name": "Christopher Tetreault",
+            "url": "https://github.com/AbsentSemicolon"
+        },
+        {
+            "name": "Andy Gertjejansen",
+            "email": "andygertjejansen@outlook.com",
+            "url": "https://github.com/quantumew"
+        },
+        {
+            "name": "Lucas Nagle",
+            "email": "lnagle@gmail.com",
+            "url": "https://github.com/lnagle93"
+        }
+    ],
     "bugs": {
         "url": "https://github.com/tests-always-included/ddq/issues"
     },
