@@ -1,6 +1,6 @@
 "use strict";
 
-describe("tests", () => {
+describe("DDQ", () => {
     var config, configValidatorMock, Ddq, events, timersMock;
 
     configValidatorMock = jasmine.createSpyObj("configValidatorMock", [

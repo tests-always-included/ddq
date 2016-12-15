@@ -79,8 +79,8 @@ function cleanup(instance, done, fn) {
 
 /**
  * Inserts a record into the database using the provided query. On error, the
- * database the database is wiped and the error is handled. If successful, the
- * polling is initiated.
+ * database is wiped and the error is handled. If successful, the polling is
+ * initiated.
  *
  * @param {Object} instance
  * @param {string} query

@@ -32,7 +32,7 @@ function doneCb(err) {
  * @param {Function} done An error handling function. Will log on success.
  */
 function manualTest(fn, done) {
-    var fnCallTime, instance;
+    var instance;
 
     instance = new Plugin(config);
     instance.connect((connectErr) => {
@@ -43,9 +43,6 @@ function manualTest(fn, done) {
             return;
         }
 
-        console.log("Connection was successfully made");
-        fnCallTime = Date.now() / 1000;
-        console.log(fnCallTime, "- Calling sendMessage now");
         fn(instance, (testErr) => {
             if (testErr) {
                 done(testErr);
@@ -53,7 +50,6 @@ function manualTest(fn, done) {
                 return;
             }
 
-            console.log("sendMessage completed. Time difference between time of call and completion:", Date.now() / 1000 - fnCallTime);
             instance.disconnect(done);
         });
     });
