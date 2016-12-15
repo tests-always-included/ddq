@@ -1,12 +1,28 @@
 {
     "author": "Christopher Tetreault",
+    "contributors": [
+        {
+            "name": "Christopher Tetreault",
+            "url": "https://github.com/AbsentSemicolon"
+        },
+        {
+            "name": "Andy Gertjejansen",
+            "email": "andygertjejansen@outlook.com",
+            "url": "https://github.com/quantumew"
+        },
+        {
+            "name": "Lucas Nagle",
+            "email": "lnagle@gmail.com",
+            "url": "https://github.com/lnagle93"
+        }
+    ],
     "bugs": {
         "url": "https://github.com/tests-always-included/ddq/issues"
     },
     "description": "DeDuplicated Queue",
     "devDependencies": {
         "codecov": "^1.0.1",
-        "ddq-backend-mock": "^2.0.0",
+        "ddq-backend-mock": "git://github.com/tests-always-included/ddq-backend-mock.git#release2.0",
         "ddq-backend-mysql": "git://github.com/tests-always-included/ddq-backend-mysql.git#release2.0",
         "eslint": "^3.5.0",
         "istanbul": "^0.4.5",
@@ -30,7 +46,7 @@
         "url": "git+https://github.com/tests-always-included/ddq.git"
     },
     "scripts": {
-        "test": "istanbul cover jasmine-node node_modules/jasmine-test-helpers/lib/ --captureExceptions spec/ && codecov && eslint .",
+        "test": "istanbul cover jasmine-node node_modules/jasmine-test-helpers/lib/ --captureExceptions spec/lib && eslint .",
         "watch": "jasmine-node node_modules/jasmine-test-helpers/lib/ lib spec --autotest --watch"
     },
     "version": "1.1.0"
