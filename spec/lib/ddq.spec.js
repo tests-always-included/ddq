@@ -92,11 +92,11 @@ describe("tests", () => {
             ddq.open();
             expect(ddq.backend.connect).toHaveBeenCalled();
         });
-        it("Fails to open a connection.", () => {
+        it("fails to open a connection.", () => {
             var ddq;
 
             ddq = new Ddq(config);
-            ddq.busy = true;
+            ddq.isBusy = true;
             ddq.open((err) => {
                 expect(err).toEqual(jasmine.any(Error));
             });
@@ -133,7 +133,7 @@ describe("tests", () => {
         });
         it("ddq is busy and fails to start connection", () => {
             ddq.open();
-            ddq.busy = true;
+            ddq.isBusy = true;
             ddq.listenStart((err) => {
                 expect(err).toEqual(jasmine.any(Error));
             });
@@ -239,7 +239,7 @@ describe("tests", () => {
 
             ddq = new Ddq(config);
             ddq.open();
-            ddq.busy = true;
+            ddq.isBusy = true;
             ddq.sendMessage((err) => {
                 expect(err).toEqual(jasmine.any(Error));
                 done();

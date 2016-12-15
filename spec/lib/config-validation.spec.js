@@ -17,7 +17,8 @@ describe("lib/config-validation", () => {
         it("throws an error if any of the configKeys are missing", () => {
             config = {
                 backend: "SomeBackend",
-                heartbeatDelayMs: 1000
+                heartbeatDelayMs: 1000,
+                maxProcessingMessages: 10
             };
             expect(() => {
                 configValidation.validateConfig(config);
@@ -30,7 +31,8 @@ describe("lib/config-validation", () => {
                 backendConfig: {
                     host: "SomeHost",
                     database: "SomeDatabase"
-                }
+                },
+                maxProcessingMessages: 10
             };
             expect(() => {
                 configValidation.validateConfig(config);
@@ -43,7 +45,8 @@ describe("lib/config-validation", () => {
                 backendConfig: {
                     host: "SomeHost",
                     database: "SomeDatabase"
-                }
+                },
+                maxProcessingMessages: 10
             };
             expect(() => {
                 configValidation.validateConfig(config);
