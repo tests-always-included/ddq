@@ -3,10 +3,20 @@
 var config, DDQ, done, instance;
 
 config = require("../script/manual-testing-config");
-DDQ = require("..");
+DDQ = require("ddq");
 
-/* eslint-disable require-jsdoc */
+
+/**
+ * Opens a connection to the database and deletes all entries.
+ *
+ * @param {Function} [callback]
+ */
 function cleanDatabase(callback) {
+    /**
+     * Logs errors passed in.
+     *
+     * @param {Error} err
+     */
     function errorHandler(err) {
         if (err) {
             console.log("There was an error during cleanup:", err);
@@ -16,6 +26,7 @@ function cleanDatabase(callback) {
     instance.open((err) => {
         errorHandler(err);
 
+        // This implementation is specific to the MySQL library.
         instance.backend.connection.query(`
             DELETE FROM ??`,
             [
@@ -23,18 +34,31 @@ function cleanDatabase(callback) {
             ], (queryErr, data) => {
                 errorHandler(queryErr);
 
-                console.log("Cleanup Data:");
-                console.log(data);
+                if (data) {
+                    console.log("Records cleaned up:", data.affectedRows);
+                }
 
-                instance.backend.connection.end((endErr) => {
+                instance.close((endErr) => {
                     errorHandler(endErr);
-                    callback();
+
+                    if (callback) {
+                        callback();
+                    }
                 });
             }
         );
     });
 }
 
+
+/**
+ * Accepts an array of methods and done callback. Each method calls the
+ * following method in it's callback unless there is an error, in which case the
+ * done callback is invoked, breaking the flow.
+ *
+ * @param {array} methods
+ * @param {Function} doneCb
+ */
 function runTests(methods, doneCb) {
     var nextMethod;
 
@@ -47,7 +71,6 @@ function runTests(methods, doneCb) {
     nextMethod = methods.shift();
     nextMethod((err) => {
         if (err) {
-            console.log("An error occurred in nextMethod callback", err);
             doneCb(err);
         } else {
             runTests(methods, doneCb);
@@ -55,6 +78,19 @@ function runTests(methods, doneCb) {
     });
 }
 
+
+/**
+ * Sets up methods for functional tests. Accepts any number of arguments. The
+ * first argument is the name of the method to be called and the following
+ * arguments (if any) are the parameters for the method. Returns a function that
+ * will call the method with the arguments, as well as a callback.
+ *
+ * Use this when you expect that the method will fail.
+ *
+ * Example: methodFails("nameOfMethod", "param1", "param2", "param3");
+ *
+ * @return {Function}
+ */
 function methodFails() {
     var args, method;
 
@@ -73,6 +109,19 @@ function methodFails() {
     };
 }
 
+
+/**
+ * Sets up methods for functional tests. Accepts any number of arguments. The
+ * first argument is the name of the method to be called and the following
+ * arguments (if any) are the parameters for the method. Returns a function that
+ * will call the method with the argments as well as a callback.
+ *
+ * Use this when you expect that the method will succeed.
+ *
+ * Example: methodSucceeds("nameOfMethod", "param1", "param2", "param3");
+ *
+ * @return {Function}
+ */
 function methodSucceeds() {
     var args, method;
 
@@ -85,19 +134,41 @@ function methodSucceeds() {
     };
 }
 
+
+/**
+ * Calls a list of methods one after another. This is used for testing that
+ * commands run as expected when they are not called in a reasoned, methodical
+ * order (i.e. one method calls the next in its callback).
+ *
+ * Example:
+ *   combine([
+ *       methodSucceeds("firstMethod"),
+ *       methodSucceeds("secondMethod"),
+ *       methodFails("thirdMethod")
+ *   ]);
+ *
+ * @param {array} list
+ * @return {Function}
+ */
 function combine(list) {
     var remaining;
 
     remaining = list.length;
 
     return (testComplete) => {
+        /**
+         * The callback for each individual function in the list. Checks that
+         * there is another function in the list and breaks the flow if there
+         * isn't or if an error has occured.
+         *
+         * @param {Error} err
+         */
         function singleTestDone(err) {
             if (!remaining) {
                 return;
             }
 
             if (err) {
-                // ABORT
                 remaining = 0;
                 testComplete(err);
             } else {
@@ -115,17 +186,16 @@ function combine(list) {
     };
 }
 
+
 beforeEach(() => {
     instance = new DDQ(config);
     instance.on("error", (err) => {
-        console.log("error listener called");
         done(err);
     });
-    instance.on("data", (data) => {
-        done(data);
-    });
     spyOn(instance, "close").andCallThrough();
-    spyOn(instance, "emit").andCallThrough();
+    spyOn(instance, "listenStart").andCallThrough();
+    spyOn(instance, "open").andCallThrough();
+    spyOn(instance, "sendMessage").andCallThrough();
 });
 describe("DDQ", () => {
     var tests;
@@ -149,7 +219,6 @@ describe("DDQ", () => {
         ];
         done = (err) => {
             expect(err).toBeUndefined();
-            expect(instance.backend.connection).not.toBeUndefined();
             testComplete();
         };
         runTests(tests, done);
@@ -161,7 +230,8 @@ describe("DDQ", () => {
         ];
         done = (err) => {
             expect(err.message).toBe("Could not open.");
-            expect(instance.backend.connection).not.toBeUndefined();
+            expect(instance.open.calls.length).toBe(2);
+            expect(instance.backend.connection.state).toBe("authenticated");
             instance.backend.connection.destroy();
             testComplete();
         };
@@ -173,6 +243,7 @@ describe("DDQ", () => {
         ];
         done = (err) => {
             expect(err.message).toBe("Could not close.");
+            expect(instance.backend.connection).toBe(null);
         };
         runTests(tests, done);
     });
@@ -182,6 +253,7 @@ describe("DDQ", () => {
         ];
         done = (err) => {
             expect(err.message).toBe("Could not send message.");
+            expect(instance.backend.connection).toBe(null);
         };
         runTests(tests, done);
     });
@@ -191,6 +263,7 @@ describe("DDQ", () => {
         ];
         done = (err) => {
             expect(err.message).toBe("Could not start listening.");
+            expect(instance.backend.connection).toBe(null);
         };
         runTests(tests, done);
     });
@@ -201,8 +274,17 @@ describe("DDQ", () => {
             methodFails("close")
         ];
         done = (err) => {
-            expect(instance.close.calls.length).toBe(2);
             expect(err.message).toBe("Could not close.");
+            expect(instance.close.calls.length).toBe(2);
+
+            /**
+             * Successfully ending the connection does not change the state of
+             * an already opened connection. If there is an error while closing,
+             * the connection's state should be "protocol_error" and if the
+             * connection is destroyed (using the "destroy" method), the state
+             * should be "disconnected".
+            */
+            expect(instance.backend.connection.state).toBe("authenticated");
             testComplete();
         };
         runTests(tests, done);
@@ -215,6 +297,8 @@ describe("DDQ", () => {
         ];
         done = (err) => {
             expect(err.message).toBe("Could not start listening.");
+            expect(instance.listenStart.calls.length).toBe(2);
+            expect(instance.isListening).toBe(true);
             instance.close(() => {
                 testComplete();
             });
@@ -233,6 +317,8 @@ describe("DDQ", () => {
         ];
         done = (err) => {
             expect(err.message).toBe("Could not open.");
+            expect(instance.backend.connection.state).toBe("authenticated");
+            expect(instance.sendMessage.calls.length).toBe(3);
             instance.close(() => {
                 cleanDatabase(testComplete);
             });
@@ -248,7 +334,8 @@ describe("DDQ", () => {
         ];
         done = (err) => {
             expect(err).toBeUndefined();
-            expect(instance.backend.connection).not.toBeUndefined();
+            expect(instance.backend.connection.state).toBe("authenticated");
+            expect(instance.isListening).toBe(false);
             cleanDatabase(testComplete);
         };
         runTests(tests, done);
@@ -278,9 +365,13 @@ describe("DDQ", () => {
         ];
         done = (err) => {
             expect(err).toBeUndefined();
+            expect(instance.sendMessage.calls.length).toBe(2);
+            expect(instance.messagesInTransit).toBe(0);
             expect(instance.close).toHaveBeenCalled();
+            expect(instance.backend.connection.state).toBe("authenticated");
             cleanDatabase(testComplete);
         };
         runTests(tests, done);
     });
 });
+
