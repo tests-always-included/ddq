@@ -221,10 +221,10 @@ describe("DDQ", () => {
 
             ddq = new Ddq(config);
             ddq.open();
-            ddq.sendMessage((err) => {
+            ddq.sendMessage("message", "topic", (err) => {
                 expect(err).not.toBeDefined();
                 done();
-            }, "message", "topic");
+            });
         });
         it("sends successfully no callback or topic", (done) => {
             var ddq;
@@ -240,10 +240,10 @@ describe("DDQ", () => {
             ddq = new Ddq(config);
             ddq.open();
             ddq.isBusy = true;
-            ddq.sendMessage((err) => {
+            ddq.sendMessage("message", "topic", (err) => {
                 expect(err).toEqual(jasmine.any(Error));
                 done();
-            }, "message", "topic");
+            });
         });
     });
 });
