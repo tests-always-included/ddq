@@ -41,8 +41,7 @@ describe("DDQ", () => {
             ddq = new Ddq(config);
             ddq.open();
             ddq.close((err) => {
-                expect(err).not.toBeDefined();
-                done();
+                done(err);
             });
         });
         it("fails closing the polling when calling backend to close", (done) => {
@@ -240,10 +239,8 @@ describe("DDQ", () => {
             ddq = new Ddq(config);
             ddq.open();
             ddq.sendMessage("message", (err) => {
-                expect(err).not.toBeDefined();
-                done();
+                done(err);
             });
-            done();
         });
         it("fails sending due to an error", (done) => {
             var ddq;
