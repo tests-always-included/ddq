@@ -234,6 +234,17 @@ describe("DDQ", () => {
             ddq.sendMessage("message");
             done();
         });
+        it("sends successfully no topic", (done) => {
+            var ddq;
+
+            ddq = new Ddq(config);
+            ddq.open();
+            ddq.sendMessage("message", (err) => {
+                expect(err).not.toBeDefined();
+                done();
+            });
+            done();
+        });
         it("fails sending due to an error", (done) => {
             var ddq;
 
