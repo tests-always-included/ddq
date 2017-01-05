@@ -8,9 +8,9 @@ timers = require("timers");
 config = {
     backend: "mock",
     backendConfig: {
-        pollingDelay: 5000
+        pollingDelayMs: 5000
     },
-    heartbeatDelay: 1000,
+    heartbeatDelayMs: 1000,
     maxProcessingMessages: 10
 };
 i = 0;
