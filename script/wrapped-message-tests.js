@@ -4,6 +4,7 @@ var assert, config, errCount, Plugin, runNext, testCounter, tests;
 
 assert = require("assert");
 config = require("./manual-testing-config");
+config.backend = process.argv[2];
 errCount = 0;
 Plugin = require("..");
 testCounter = 0;

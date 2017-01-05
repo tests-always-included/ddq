@@ -3,6 +3,7 @@
 var config, Plugin;
 
 config = require("./manual-testing-config");
+config.backend = process.argv[2];
 Plugin = require("..");
 
 

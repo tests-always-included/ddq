@@ -4,6 +4,7 @@ var assert, config, Plugin;
 
 assert = require("assert");
 config = require("./manual-testing-config");
+config.backend = process.argv[2];
 Plugin = require("..");
 
 
