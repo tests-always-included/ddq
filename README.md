@@ -1,10 +1,11 @@
 DeDuplicated Queue (DDQ)
 ========================
 
-[![Build Status][travis-image]][Travis CI]
-[![Dependencies][dependencies-image]][Dependencies]
-[![Dev Dependencies][devdependencies-image]][Dev Dependencies]
-[![codecov.io][codecov-image]][Code Coverage]
+[![npm version][npm-badge]][npm-link]
+[![Build Status][travis-badge]][travis-link]
+[![Dependencies][dependencies-badge]][dependencies-link]
+[![Dev Dependencies][devdependencies-badge]][devdependencies-link]
+[![codecov.io][codecov-badge]][codecov-link]
 
 
 About
@@ -121,11 +122,14 @@ At some time you'll want to stop listening to DDQ which you will call `close`. T
         }
     });
 
-[Code Coverage]: https://codecov.io/github/tests-always-included/ddq?branch=master
-[codecov-image]: https://codecov.io/github/tests-always-included/ddq/coverage.svg?branch=master
-[Dev Dependencies]: https://david-dm.org/tests-always-included/ddq#info=devDependencies
-[devdependencies-image]: https://david-dm.org/tests-always-included/ddq/dev-status.png
-[Dependencies]: https://david-dm.org/tests-always-included/ddq
-[dependencies-image]: https://david-dm.org/tests-always-included/ddq.png
-[travis-image]: https://secure.travis-ci.org/tests-always-included/ddq.png
-[Travis CI]: http://travis-ci.org/tests-always-included/ddq
+
+[codecov-badge]: https://img.shields.io/codecov/c/github/tests-always-included/ddq/master.svg
+[codecov-link]: https://codecov.io/github/tests-always-included/ddq?branch=master
+[dependencies-badge]: https://img.shields.io/david/tests-always-included/ddq.svg
+[dependencies-link]: https://david-dm.org/tests-always-included/ddq
+[devdependencies-badge]: https://img.shields.io/david/dev/tests-always-included/ddq.svg
+[devdependencies-link]: https://david-dm.org/tests-always-included/ddq#info=devDependencies
+[npm-badge]: https://img.shields.io/npm/v/ddq.svg
+[npm-link]: https://npmjs.org/package/ddq
+[travis-badge]: https://img.shields.io/travis/tests-always-included/ddq/master.svg
+[travis-link]: http://travis-ci.org/tests-always-included/ddq
