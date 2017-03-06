@@ -8,7 +8,7 @@ module.exports = () => {
         "remove",
         "requeue"
     ]);
-    mock.heartbeat.andCallFake((hbCallback) => {
+    mock.heartbeat.and.callFake((hbCallback) => {
         if (mock.heartbeat.callCount === 1) {
             if (mock.heartbeatError) {
                 hbCallback(new Error("Could not do heartbeat."));
@@ -19,8 +19,8 @@ module.exports = () => {
     });
     mock.heartbeatError = false;
     mock.message = "mock message";
-    mock.remove.andCallFake(() => {});
-    mock.requeue.andCallFake(() => {});
+    mock.remove.and.callFake(() => {});
+    mock.requeue.and.callFake(() => {});
 
     return mock;
 };

@@ -76,7 +76,7 @@ describe("DDQ", () => {
             ddq = new Ddq(config);
             ddq.isListening = true;
             ddq.open();
-            spyOn(ddq.backend, "stopListening").andCallThrough();
+            spyOn(ddq.backend, "stopListening").and.callThrough();
             ddq.close(() => {
                 expect(ddq.backend.stopListening).toHaveBeenCalled();
             });
@@ -107,7 +107,7 @@ describe("DDQ", () => {
         beforeEach(() => {
             ddq = new Ddq(config);
             timersMock.setTimeout = jasmine.createSpy("timeout");
-            spyOn(ddq.backend, "startListening").andCallThrough();
+            spyOn(ddq.backend, "startListening").and.callThrough();
             wmMock = require("../mock/wrapped-message-mock")();
             ddq.backend.storedData = [
                 {
@@ -142,7 +142,7 @@ describe("DDQ", () => {
 
             called = false;
 
-            timersMock.setTimeout.andCallFake((callback) => {
+            timersMock.setTimeout.and.callFake((callback) => {
                 if (!called) {
                     called = true;
                     callback();
@@ -162,7 +162,7 @@ describe("DDQ", () => {
 
             called = false;
 
-            timersMock.setTimeout.andCallFake((callback) => {
+            timersMock.setTimeout.and.callFake((callback) => {
                 if (!called) {
                     called = true;
                     callback();
@@ -174,7 +174,7 @@ describe("DDQ", () => {
                 done();
             });
             ddq.listenStart();
-            wmMock.heartbeat.andCallFake((callback) => {
+            wmMock.heartbeat.and.callFake((callback) => {
                 callback(new Error("err"));
             });
             ddq.backend.emit("data", wmMock);

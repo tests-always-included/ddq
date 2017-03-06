@@ -25,8 +25,9 @@
         "ddq-backend-mock": "^2.0.1",
         "eslint": "^3.5.0",
         "istanbul": "^0.4.5",
-        "jasmine-node": "^1.14.5",
-        "jasmine-test-helpers": "^1.1.0"
+        "jasmine": "~2.5.2",
+        "jasmine-test-helpers": "^1.1.0",
+        "nodemon": "~1.11.0"
     },
     "engines": {
         "node": ">=4"
@@ -45,8 +46,8 @@
         "url": "git+https://github.com/tests-always-included/ddq.git"
     },
     "scripts": {
-        "test": "istanbul cover jasmine-node node_modules/jasmine-test-helpers/lib/ --captureExceptions spec/lib && eslint .",
-        "watch": "jasmine-node node_modules/jasmine-test-helpers/lib/ lib spec --autotest --watch"
+        "test": "istanbul cover jasmine && eslint .",
+        "watch": "nodemon --exec jasmine"
     },
     "version": "2.0.3"
 }
